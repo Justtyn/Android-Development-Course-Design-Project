@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家猫百科全书：科学喂养与护理</title>
+    <!-- 引入 Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 设置全局字体为 Inter，并提供中文字体回退 */
+        body {
+            font-family: 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+        }
+        /* 针对移动端优化，确保内容可读性 */
+        .content-section {
+            line-height: 1.8;
+        }
+        /* H2下划线颜色随主题变化 */
+        h2 {
+            border-bottom-width: 2px;
+            padding-bottom: 8px;
+            margin-top: 30px;
+        }
+        /* Light Mode H2 border color */
+        .light h2 {
+            border-color: #e0e7ff; /* 浅蓝色下划线 */
+        }
+        /* Dark Mode H2 border color */
+        .dark h2 {
+            border-color: #4f46e5; /* 较深的靛蓝色下划线 */
+        }
+        /* 平滑滚动效果，用于目录跳转 */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* 目录栏固定在左侧，仅在小屏幕上可见 */
+        #toc-sidebar {
+            transition: transform 0.3s ease-in-out;
+            z-index: 50;
+        }
+        @media (max-width: 767px) {
+            /* 手机视图下，目录隐藏在左侧，需要点击按钮展开 */
+            #toc-sidebar {
+                transform: translateX(-100%);
+            }
+            #toc-sidebar.active {
+                transform: translateX(0);
+            }
+        }
+    </style>
+    <script>
+        // 配置 Tailwind CSS 以支持 dark mode (基于 class)
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+</head>
+<!-- 应用基础背景和文本颜色，并定义暗色模式下的颜色 -->
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-500">
+
+<!-- 主容器 -->
+<div class="flex">
+
+    <!-- 目录侧边栏 (Table of Contents Sidebar) -->
+    <nav id="toc-sidebar"
+         class="fixed inset-y-0 left-0 w-64 bg-gray-50 dark:bg-gray-800 p-6 overflow-y-auto shadow-xl md:shadow-none md:relative md:translate-x-0 md:w-64 flex-shrink-0 transition-colors duration-500">
+        <h2 class="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4 border-b pb-2">
+            百科大纲</h2>
+        <ul class="space-y-2 text-sm">
+            <!-- 链接到主要章节 -->
+            <li><a href="#section1"
+                   class="block p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 transition duration-150 text-indigo-600 dark:text-indigo-400 font-medium">1.
+                家猫的起源与驯化</a></li>
+            <li><a href="#section2"
+                   class="block p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 transition duration-150 text-indigo-600 dark:text-indigo-400 font-medium">2.
+                生理结构与感官奥秘</a></li>
+            <li><a href="#section3"
+                   class="block p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 transition duration-150 text-indigo-600 dark:text-indigo-400 font-medium">3.
+                常见品种与遗传学</a></li>
+            <li><a href="#section4"
+                   class="block p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 transition duration-150 text-indigo-600 dark:text-indigo-400 font-medium">4.
+                行为学：理解猫咪语言</a></li>
+            <li><a href="#section5"
+                   class="block p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 transition duration-150 text-indigo-600 dark:text-indigo-400 font-medium">5.
+                科学喂养与营养学基础</a></li>
+            <li><a href="#section6"
+                   class="block p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 transition duration-150 text-indigo-600 dark:text-indigo-400 font-medium">6.
+                健康护理与常见疾病</a></li>
+            <li><a href="#section7"
+                   class="block p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900 transition duration-150 text-indigo-600 dark:text-indigo-400 font-medium">7.
+                适龄绝育与社会责任</a></li>
+        </ul>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="flex-1 min-w-0 p-4 sm:p-6 md:p-8 lg:p-10">
+
+        <!-- 导言卡片 -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 content-section transition-colors duration-500">
+            <h2 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mb-4">
+                欢迎来到家猫百科全书</h2>
+            <p class="text-lg text-gray-600 dark:text-gray-300">
+                家猫（Felis
+                catus）是全球最受欢迎的伴侣动物之一。本百科旨在以科学、严谨的角度，为所有猫咪爱好者和饲主提供系统化的知识，涵盖从起源到日常护理的方方面面，帮助您成为一位更称职、更懂猫的家长。
+            </p>
+        </div>
+
+        <!-- ====================================================== -->
+        <!-- 章节 1: 家猫的起源与驯化 -->
+        <!-- ====================================================== -->
+        <section id="section1"
+                 class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 content-section transition-colors duration-500">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100 border-indigo-200 dark:border-indigo-600">
+                1. 家猫的起源与驯化</h2>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">1.1.
+                非洲野猫：祖先的足迹</h3>
+            <p class="dark:text-gray-300">
+                基因研究表明，所有现代家猫的祖先都指向<strong
+                    class="text-indigo-600 dark:text-indigo-400">非洲野猫（Felis silvestris
+                lybica）</strong>。驯化过程并非主动圈养，而是发生在约一万年前中东新月沃地。当时人类开始农耕，谷物吸引了大量啮齿动物，而野猫则被丰富的食物来源吸引，逐渐靠近人类聚居地。
+            </p>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">1.2.
+                互利共生：驯化的本质</h3>
+            <p class="dark:text-gray-300">
+                与狗的主动选育不同，猫的驯化是一种<strong
+                    class="text-indigo-600 dark:text-indigo-400">互利共生关系</strong>。猫通过捕食农田和粮仓里的老鼠，为人类提供了害虫控制服务，而人类则默许它们的存在。这种“自我驯化”过程导致了性情更温顺、更适应人类环境的猫被自然选择保留下来。
+            </p>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- 章节 2: 生理结构与感官奥秘 -->
+        <!-- ====================================================== -->
+        <section id="section2"
+                 class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 content-section transition-colors duration-500">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">2.
+                生理结构与感官奥秘</h2>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">2.1.
+                捕猎者的身体构造</h3>
+            <p class="dark:text-gray-300">
+                猫的身体是天生的捕猎机器。它们拥有极其灵活的脊柱、强大的后肢和著名的<strong
+                    class="text-indigo-600 dark:text-indigo-400">可伸缩爪子</strong>（除了少数品种如猎豹）。可伸缩爪子能保持尖锐，使其成为理想的武器和攀爬工具。猫的骨骼数量约为230块（人类约206块），这赋予了它们惊人的柔韧性。
+            </p>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">2.2.
+                独特的感官系统</h3>
+            <ul class="list-disc ml-5 space-y-2 mt-2 dark:text-gray-300">
+                <li><strong class="font-semibold">视觉：</strong>猫是夜行性动物，视网膜上杆状细胞密度极高，使其在微弱光线下也能视物。它们眼后有一层<strong
+                        class="text-indigo-600 dark:text-indigo-400">脉络膜毯（Tapetum
+                    Lucidum）</strong>，能反射光线，这也是夜间猫眼发光的原因。然而，猫是轻微的色盲，主要识别蓝色和绿色光谱。
+                </li>
+                <li><strong
+                        class="font-semibold">听觉：</strong>猫的听觉异常灵敏，能听到人类听不到的<strong
+                        class="text-indigo-600 dark:text-indigo-400">超声波</strong>（高达65kHz），这对于捕猎啮齿动物至关重要。它们的耳朵可以独立转动180度，以精确锁定声源。
+                </li>
+                <li><strong class="font-semibold">胡须（Vibrissae）：</strong>胡须是猫咪重要的触觉器官，能感知极微小的气流变化和障碍物。它能帮助猫判断身体是否能通过狭窄的空间。
+                </li>
+            </ul>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- 章节 3: 常见品种与遗传学 -->
+        <!-- ====================================================== -->
+        <section id="section3"
+                 class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 content-section transition-colors duration-500">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">3.
+                常见品种与遗传学</h2>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">3.1.
+                品种分类概览</h3>
+            <p class="dark:text-gray-300">
+                猫的品种繁多，但通常根据毛发长度、体型和地域起源进行分类。品种的形成多依赖于<strong
+                    class="text-indigo-600 dark:text-indigo-400">基因突变</strong>和人工选择。
+            </p>
+            <table class="w-full mt-4 text-sm text-left border-collapse rounded-lg overflow-hidden">
+                <thead class="bg-indigo-500 text-white dark:bg-indigo-700">
+                <tr>
+                    <th class="p-3">类型</th>
+                    <th class="p-3">代表品种</th>
+                    <th class="p-3">特征</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="bg-indigo-50 border-b dark:bg-gray-700 dark:text-gray-200">
+                    <td class="p-3">长毛猫</td>
+                    <td class="p-3">布偶猫（Ragdoll）、波斯猫（Persian）</td>
+                    <td class="p-3">毛发浓密，需定期梳理，性格通常较为沉稳。</td>
+                </tr>
+                <tr class="bg-white border-b dark:bg-gray-800 dark:text-gray-200">
+                    <td class="p-3">短毛猫</td>
+                    <td class="p-3">英国短毛猫（British Shorthair）、美国短毛猫（American Shorthair）
+                    </td>
+                    <td class="p-3">易于打理，适应性强，性格活泼好动。</td>
+                </tr>
+                <tr class="bg-indigo-50 dark:bg-gray-700 dark:text-gray-200">
+                    <td class="p-3">特殊品种</td>
+                    <td class="p-3">斯芬克斯猫（Sphynx）、苏格兰折耳猫（Scottish Fold）</td>
+                    <td class="p-3">无毛或存在基因缺陷（如折耳猫的软骨病），饲养需特别注意。</td>
+                </tr>
+                </tbody>
+            </table>
+            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400 italic">
+                **注意：** 苏格兰折耳猫的折耳特征源于软骨发育不良的基因突变，饲养时应充分了解相关健康风险。
+            </p>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- 章节 4: 行为学：理解猫咪语言 -->
+        <!-- ====================================================== -->
+        <section id="section4"
+                 class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 content-section transition-colors duration-500">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">4.
+                行为学：理解猫咪语言</h2>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">4.1.
+                关键的肢体语言</h3>
+            <ul class="list-disc ml-5 space-y-2 mt-2 dark:text-gray-300">
+                <li><strong class="font-semibold">尾巴：</strong>高举尾巴（自信、友好）；尾巴夹在两腿间（恐惧、不确定）；快速抽动（兴奋、烦躁或准备攻击）。
+                </li>
+                <li><strong class="font-semibold">眼睛：</strong>缓慢眨眼是猫咪表示<strong
+                        class="text-indigo-600 dark:text-indigo-400">信任和爱意</strong>的信号，被称为“猫咪之吻”。瞳孔放大通常表示兴奋或恐惧。
+                </li>
+                <li><strong class="font-semibold">耳朵：</strong>耳朵朝前（放松、感兴趣）；耳朵侧向或向后（紧张、害怕或生气）。
+                </li>
+            </ul>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">4.2.
+                社交与气味标记</h3>
+            <p class="dark:text-gray-300">
+                猫咪是<strong class="text-indigo-600 dark:text-indigo-400">半社会化</strong>动物，其社交模式往往围绕资源分配展开。它们通过摩擦身体（蹭人或蹭家具）来留下<strong
+                    class="text-indigo-600 dark:text-indigo-400">费洛蒙（Pheromones）</strong>进行气味标记，这是一种无声的交流，用于宣示领地和建立亲密关系。
+            </p>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- 章节 5: 科学喂养与营养学基础 -->
+        <!-- ====================================================== -->
+        <section id="section5"
+                 class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 content-section transition-colors duration-500">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">5.
+                科学喂养与营养学基础</h2>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">5.1.
+                绝对肉食性动物</h3>
+            <p class="dark:text-gray-300">
+                猫是<strong class="text-indigo-600 dark:text-indigo-400">专性肉食动物（Obligate
+                Carnivores）</strong>，这意味着它们必须从动物组织中获取特定的营养素才能生存和健康。
+            </p>
+            <ul class="list-disc ml-5 space-y-2 mt-2 dark:text-gray-300">
+                <li><strong class="font-semibold">牛磺酸（Taurine）：</strong>一种必需氨基酸，只能从肉类中获取。缺乏牛磺酸会导致<strong
+                        class="text-red-600 dark:text-red-400">失明和心脏病（扩张型心肌病）</strong>。
+                </li>
+                <li><strong class="font-semibold">维生素A：</strong>猫无法将植物中的β-胡萝卜素转化为维生素A，必须直接从动物脂肪中获取。
+                </li>
+                <li><strong class="font-semibold">高蛋白、低碳水化合物：</strong>猫的代谢系统适应了高蛋白饮食，不适合高碳水化合物食物。
+                </li>
+            </ul>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">5.2.
+                饮水的重要性</h3>
+            <p class="dark:text-gray-300">
+                猫的祖先在沙漠中演化，习惯从猎物体内获取水分，因此它们的口渴感较弱。这使得家猫容易出现<strong
+                    class="text-red-600 dark:text-red-400">慢性脱水</strong>，长期脱水是导致<strong
+                    class="text-red-600 dark:text-red-400">泌尿系统疾病和慢性肾病</strong>的主要风险因素。鼓励猫咪多喝水，可以通过：提供流动水饮水器、多喂食湿粮（罐头或生肉）。
+            </p>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- 章节 6: 健康护理与常见疾病 -->
+        <!-- ====================================================== -->
+        <section id="section6"
+                 class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 content-section transition-colors duration-500">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">6.
+                健康护理与常见疾病</h2>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">6.1.
+                预防性医疗：疫苗与驱虫</h3>
+            <ul class="list-disc ml-5 space-y-2 mt-2 dark:text-gray-300">
+                <li><strong class="font-semibold">核心疫苗：</strong>猫三联（FVRCP），预防猫病毒性鼻气管炎、猫杯状病毒和猫泛白细胞减少症（猫瘟）。
+                </li>
+                <li><strong class="font-semibold">非核心疫苗：</strong>猫白血病病毒（FeLV）疫苗，推荐给散养或多猫家庭。
+                </li>
+                <li><strong class="font-semibold">驱虫：</strong>定期进行体内外驱虫，尤其注意预防心丝虫、跳蚤和耳螨。
+                </li>
+            </ul>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">6.2.
+                常见高发疾病警示</h3>
+            <p class="dark:text-gray-300">
+                早期发现疾病迹象至关重要。以下是猫咪常见的几种高发疾病：
+            </p>
+            <ul class="list-disc ml-5 space-y-2 mt-2 dark:text-gray-300">
+                <li><strong
+                        class="font-semibold text-red-600 dark:text-red-400">慢性肾病（CKD）：</strong>老年猫最常见的疾病。症状包括多饮多尿、体重减轻、呕吐。早期干预可延缓病情。
+                </li>
+                <li><strong class="font-semibold text-red-600 dark:text-red-400">糖尿病：</strong>通常与肥胖和高碳水化合物饮食有关。
+                </li>
+                <li><strong
+                        class="font-semibold text-red-600 dark:text-red-400">下泌尿道疾病（FLUTD）：</strong>如尿道结石、膀胱炎等，公猫尤其容易发生尿路堵塞，这是一种<strong
+                        class="text-red-600 dark:text-red-400">危及生命的急症</strong>。
+                </li>
+            </ul>
+        </section>
+
+        <!-- ====================================================== -->
+        <!-- 章节 7: 适龄绝育与社会责任 -->
+        <!-- ====================================================== -->
+        <section id="section7"
+                 class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 content-section transition-colors duration-500">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">7.
+                适龄绝育与社会责任</h2>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">7.1.
+                绝育的健康益处</h3>
+            <p class="dark:text-gray-300">
+                对非繁殖用途的家猫进行绝育手术是负责任的饲养行为，通常推荐在<strong
+                    class="text-indigo-600 dark:text-indigo-400">6-8月龄</strong>左右进行。绝育的健康益处包括：
+            </p>
+            <ul class="list-disc ml-5 space-y-2 mt-2 dark:text-gray-300">
+                <li>**母猫：**几乎完全消除子宫蓄脓和卵巢癌的风险，显著降低乳腺肿瘤的风险。</li>
+                <li>**公猫：**消除睾丸癌的风险，显著减少发情期乱尿标记行为和离家出走的冲动。</li>
+            </ul>
+            <h3 class="text-lg font-medium text-indigo-500 dark:text-indigo-300 mt-4 mb-2">7.2.
+                解决流浪猫问题</h3>
+            <p class="dark:text-gray-300">
+                大规模绝育（TNR，即Trap-Neuter-Return，捕捉-绝育-放回）是目前公认的<strong
+                    class="text-indigo-600 dark:text-indigo-400">人道控制流浪猫数量</strong>、维护公共卫生的有效方法。作为宠物主人，避免弃养、适龄绝育是对社会责任的体现。
+            </p>
+        </section>
+
+        <!-- 底部声明 -->
+        <footer class="text-center p-6 mt-10 text-gray-500 dark:text-gray-400 text-sm border-t border-gray-200 dark:border-gray-700 transition-colors duration-500">
+            <p>&copy; 2025 科学养猫知识普及。本内容仅供参考，具体医疗问题请咨询专业兽医。</p>
+        </footer>
+
+    </main>
+</div>
+
+<!-- JavaScript for Mobile Menu Toggle and Smooth Scrolling, and Theme Toggle -->
+<script>
+    const tocToggle = document.getElementById('toc-toggle');
+    const tocSidebar = document.getElementById('toc-sidebar');
+    const tocLinks = tocSidebar.querySelectorAll('a');
+
+    const themeToggle = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
+    const htmlElement = document.documentElement;
+
+    // 1. 黑暗模式切换逻辑
+    // 设置主题
+    function setTheme(isDark) {
+        if (isDark) {
+            htmlElement.classList.add('dark');
+            htmlElement.classList.remove('light');
+            localStorage.setItem('theme', 'dark');
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        } else {
+            htmlElement.classList.remove('dark');
+            htmlElement.classList.add('light');
+            localStorage.setItem('theme', 'light');
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+    }
+
+    // 初始主题检查：优先使用用户存储的偏好，其次使用系统偏好
+    const storedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+        setTheme(true);
+    } else {
+        setTheme(false);
+    }
+
+    // 切换按钮的事件监听器
+    themeToggle.addEventListener('click', () => {
+        // 检查当前是否为黑暗模式
+        const isDark = htmlElement.classList.contains('dark');
+        setTheme(!isDark);
+    });
+
+
+    // 2. 移动端目录切换逻辑
+    tocToggle.addEventListener('click', () => {
+        tocSidebar.classList.toggle('active');
+    });
+
+    // 3. 移动端点击目录项后自动关闭侧边栏
+    tocLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            // 如果是移动端视图，点击链接后隐藏目录
+            if (window.innerWidth < 768) {
+                // 延迟关闭，确保平滑滚动已经开始
+                setTimeout(() => {
+                    tocSidebar.classList.remove('active');
+                }, 300);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
