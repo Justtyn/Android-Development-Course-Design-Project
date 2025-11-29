@@ -53,25 +53,25 @@ public class RegisterActivity extends AppCompatActivity {
         String confirm = etConfirmPassword.getText() == null ? "" : etConfirmPassword.getText().toString();
 
         if (username.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
-            Toast.makeText(this, "账号和密码不能为空", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "喵～，账号和密码不能为空喔", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (!password.equals(confirm)) {
-            Toast.makeText(this, "两次输入的密码不一致", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "喵～，两次输入的密码不一致喔", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (dbHelper.isUsernameExists(username)) {
-            Toast.makeText(this, "该账号已存在，请换一个", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "喵～，该账号已存在了喔，请换一个", Toast.LENGTH_SHORT).show();
             return;
         }
 
         long rowId = dbHelper.registerUser(username, password, nickname);
         if (rowId == -1) {
-            Toast.makeText(this, "注册失败，请重试", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "喵～，注册失败啦，请重试喔", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "注册成功，请返回登录", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "喵～，注册成功啦，请返回登录喔", Toast.LENGTH_SHORT).show();
             finish();  // 关闭注册页，回到登录页
         }
     }

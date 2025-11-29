@@ -16,7 +16,13 @@
         <item name="colorSurface">@color/meow_surface</item>
         <item name="colorOnSurface">@color/meow_on_surface</item>
 
-        <!-- 状态栏颜色 -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
+
+    <style name="Theme.Meow" parent="Base.Theme.Meow" />
 </resources>

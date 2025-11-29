@@ -62,7 +62,7 @@ public class LoginActivity extends AppCompatActivity {
         String password = etPassword.getText() == null ? "" : etPassword.getText().toString();
 
         if (username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "请输入账号和密码", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "喵～，请输入账号和密码喔", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -77,14 +77,14 @@ public class LoginActivity extends AppCompatActivity {
             // 2. 保存到 SharedPreferences
             MeowPreferences.saveLogin(this, username, nickname);
 
-            Toast.makeText(this, "登录成功，喵~", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "登录成功，喵~！", Toast.LENGTH_SHORT).show();
 
             // 3. 跳转到主界面 MainActivity
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
         } else {
-            Toast.makeText(this, "账号或密码错误", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "喵～，账号或密码错误了喔", Toast.LENGTH_SHORT).show();
         }
     }
 
