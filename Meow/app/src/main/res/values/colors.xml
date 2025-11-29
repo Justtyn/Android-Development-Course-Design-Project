@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 基础文字色 -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- 主色系：肉垫粉 + 橘猫黄 -->
+    <color name="meow_primary">#FF8A80</color>        <!-- 顶部栏 / 主按钮 -->
+    <color name="meow_primary_dark">#FF6D6D</color>   <!-- 状态栏等 -->
+    <color name="meow_accent">#FFB74D</color>         <!-- 强调色 / 次要按钮 -->
+
+    <!-- 背景与文字 -->
+    <color name="meow_background">#FFFDF7</color>     <!-- 整体背景：奶油浅底 -->
+    <color name="meow_surface">#FFFFFFFF</color>      <!-- 纯白卡片 -->
+    <color name="meow_on_surface">#FF333333</color>   <!-- 主文字色 -->
+    <color name="meow_on_surface_muted">#FF777777</color> <!-- 次要文字色 -->
+
+    <!-- 柔和但更明显一点的卡片底色 -->
+    <color name="meow_card_soft_pink">#FFE3CC</color>     <!-- 用户信息 / 打卡 -->
+    <color name="meow_card_soft_blue">#FFE6B8</color>     <!-- 猫咪档案 -->
+    <color name="meow_card_soft_green">#FFE6B8</color>    <!-- 喂养记录 -->
+    <color name="meow_card_soft_purple">#FFE6B8</color>   <!-- 喵音 FM -->
+    <color name="meow_card_soft_yellow">#FFE6B8</color>   <!-- 养猫百科 -->
+</resources>

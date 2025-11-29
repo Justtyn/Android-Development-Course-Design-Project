@@ -1,0 +1,22 @@
+<resources>
+
+    <style name="Base.Theme.Meow" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- 主色：Toolbar、实心按钮等 -->
+        <item name="colorPrimary">@color/meow_primary</item>
+        <item name="colorPrimaryVariant">@color/meow_primary_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- 次色：强调色、描边按钮等 -->
+        <item name="colorSecondary">@color/meow_accent</item>
+        <item name="colorSecondaryVariant">@color/meow_accent</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- 背景 / 卡片色，可以让整体偏奶油一点 -->
+        <item name="android:colorBackground">@color/meow_background</item>
+        <item name="colorSurface">@color/meow_surface</item>
+        <item name="colorOnSurface">@color/meow_on_surface</item>
+
+        <!-- 状态栏颜色 -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+    </style>
+</resources>
