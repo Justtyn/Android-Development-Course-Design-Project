@@ -7,6 +7,18 @@
     android:layout_height="match_parent"
     tools:context=".cat.CatProfileActivity">
 
+    <ImageView
+        android:id="@+id/imgBackground"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/cat_blue"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
+
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/topAppBar4"
         android:layout_width="0dp"
@@ -19,5 +31,22 @@
         app:title="喵 Profile"
         app:titleCentered="true"
         app:titleTextColor="@android:color/white" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTracks"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/topAppBar4"
+        app:layout_constraintVertical_bias="0.0"
+        tools:listitem="@layout/item_cat_profile_track" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

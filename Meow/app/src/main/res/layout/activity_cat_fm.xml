@@ -32,26 +32,9 @@
         app:titleCentered="true"
         app:titleTextColor="@android:color/white" />
 
-    <!-- 顶部文案说明 -->
-    <TextView
-        android:id="@+id/tvFmIntro"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:text="给主子听一点舒服的猫咪 BGM，记得一次只放一首喔～"
-        android:textColor="@color/meow_on_surface"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/topAppBar" />
-
-    <!-- 音频列表（后面用 RecyclerView 填充多条） -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTracks"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingStart="16dp"
@@ -62,7 +45,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvFmIntro"
+        app:layout_constraintTop_toBottomOf="@+id/topAppBar"
         app:layout_constraintVertical_bias="0.0"
         tools:listitem="@layout/item_fm_track" />
 

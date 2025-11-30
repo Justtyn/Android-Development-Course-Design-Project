@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardCatProfile"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/meow_surface"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/meow_card_soft_pink"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <!-- 左侧：圆形猫咪头像 -->
+        <ImageView
+            android:id="@+id/imgCatAvatar"
+            android:layout_width="76dp"
+            android:layout_height="76dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_cat_avatar_circle"
+            android:clipToOutline="true"
+            android:contentDescription="猫咪头像"
+            android:scaleType="centerCrop"
+            android:src="@drawable/logo" />
+
+        <!-- 右侧：猫咪信息（名字 / 品种 / 年龄 / 简介） -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- 猫咪名字 -->
+            <TextView
+                android:id="@+id/tvCatName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="小布丁"
+                android:textColor="@color/meow_on_surface"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- 品种 -->
+            <TextView
+                android:id="@+id/tvCatBreed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="英短 · 蓝白"
+                android:textColor="@color/meow_on_surface_muted"
+                android:textSize="13sp" />
+
+            <!-- 年龄 -->
+            <TextView
+                android:id="@+id/tvCatAge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="2 岁 半"
+                android:textColor="@color/meow_on_surface_muted"
+                android:textSize="13sp" />
+
+            <!-- 简介 -->
+            <TextView
+                android:id="@+id/tvCatIntro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="怕生但粘人，喜欢趴在键盘上看你写代码。"
+                android:textColor="@color/meow_on_surface_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 超大圆角：宽高相等时会呈现圆形 -->
+    <corners android:radius="20dp" />
+    <!-- 背景用白色，边缘会更干净一点 -->
+    <solid android:color="@color/meow_primary" />
+</shape>

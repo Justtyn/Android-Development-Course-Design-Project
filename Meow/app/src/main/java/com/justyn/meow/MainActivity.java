@@ -12,6 +12,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.justyn.meow.auth.LoginActivity;
 import com.justyn.meow.cat.CatFmActivity;
+import com.justyn.meow.cat.CatPicActivity;
 import com.justyn.meow.cat.CatProfileActivity;
 import com.justyn.meow.cat.CatWikiActivity;
 import com.justyn.meow.cat.FeedLogActivity;
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private MaterialCardView cardFeedLog;
     private MaterialCardView cardMeowFM;
     private MaterialCardView cardCatWiki;
+    private MaterialCardView cardMeowPic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         cardFeedLog = findViewById(R.id.cardFeedLog);
         cardMeowFM = findViewById(R.id.cardMeowFM);
         cardCatWiki = findViewById(R.id.cardCatWiki);
+        cardMeowPic = findViewById(R.id.cardMeowPic);
 
         // 绑定当前用户
         bindCurrentUser();
@@ -70,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
 
         cardCatWiki.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, CatWikiActivity.class))
+        );
+
+        cardMeowPic.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, CatPicActivity.class))
         );
     }
 
