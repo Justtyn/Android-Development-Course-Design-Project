@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/meow_background"
     tools:context=".cat.CatPicActivity">
 
     <ImageView
@@ -20,16 +21,34 @@
         tools:ignore="ContentDescription" />
 
     <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/topAppBar4"
+        android:id="@+id/topAppBar"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="?attr/actionBarSize"
         android:background="@color/meow_primary"
-        android:paddingTop="25dp"
+        android:paddingTop="24dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:title="云吸猫"
         app:titleCentered="true"
         app:titleTextColor="@android:color/white" />
+
+    <!-- 猫猫图片网格列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvCatPics"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="12dp"
+        android:overScrollMode="never"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="2"
+        app:layout_constraintTop_toBottomOf="@id/topAppBar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_cat_pic" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
