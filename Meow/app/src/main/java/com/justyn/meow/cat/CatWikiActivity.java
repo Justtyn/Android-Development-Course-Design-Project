@@ -19,8 +19,9 @@ public class CatWikiActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cat_wiki);
 
         WebView webView = findViewById(R.id.webViewMeow);
+        // 允许网页使用 JavaScript
         webView.getSettings().setJavaScriptEnabled(true);
+        // 加载 assets 下HTML
         webView.loadUrl("file:///android_asset/cat_wiki.html");
-
     }
 }

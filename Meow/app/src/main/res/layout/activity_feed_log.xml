@@ -7,4 +7,17 @@
     android:layout_height="match_parent"
     tools:context=".cat.FeedLogActivity">
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar4"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:background="@color/meow_primary"
+        android:paddingTop="25dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="喵 Feed Log"
+        app:titleCentered="true"
+        app:titleTextColor="@android:color/white" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

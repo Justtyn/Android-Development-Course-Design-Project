@@ -60,7 +60,7 @@ public class LoginActivity extends AppCompatActivity {
 
         boolean ok = dbHelper.checkLogin(username, password);
         if (ok) {
-            // 1. 查出昵称（可选，没有就用空）
+            // 查出昵称
             String nickname = dbHelper.getNicknameByUsername(username);
             if (nickname == null) {
                 nickname = "";
