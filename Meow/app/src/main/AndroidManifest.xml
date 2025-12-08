@@ -22,9 +22,6 @@
             android:name=".cat.CatFmActivity"
             android:exported="false" />
         <activity
-            android:name=".cat.FeedLogActivity"
-            android:exported="false" />
-        <activity
             android:name=".cat.CatProfileActivity"
             android:exported="false" />
         <activity
