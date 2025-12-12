@@ -32,6 +32,7 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
 
     // 当前正在播放的 position（默认 NO_POSITION = -1，表示没有正在播放）
     private int playingPosition = RecyclerView.NO_POSITION;
+    private boolean isPlaying;
 
     public CatFmAdapter(List<FmTrack> data, OnTrackClickListener listener) {
         this.data = data;
@@ -45,8 +46,17 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
      */
     @SuppressLint("NotifyDataSetChanged")
     public void updatePlayingPosition(int position) {
+        // 默认认为正在播放，兼容旧调用
+        updatePlayingState(position, position != RecyclerView.NO_POSITION);
+    }
+
+    /**
+     * 同时更新当前播放的下标以及是否处于播放状态（用于展示「暂停 / 继续」文案）
+     */
+    @SuppressLint("NotifyDataSetChanged")
+    public void updatePlayingState(int position, boolean isPlaying) {
         this.playingPosition = position;
-        // 整个列表刷新
+        this.isPlaying = isPlaying;
         notifyDataSetChanged();
     }
 
@@ -67,7 +77,7 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
         boolean isPlaying = (position == playingPosition);
 
         // 把数据和“是否正在播放”的状态一并交给 ViewHolder
-        holder.bind(track, isPlaying);
+        holder.bind(track, isPlaying, isPlaying && this.isPlaying);
 
         // 播放按钮点击事件
         holder.btnPlayPause.setOnClickListener(v -> {
@@ -121,14 +131,20 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
         /**
          * 绑定每一条数据，并根据 isPlaying 决定按钮文本
          */
-        void bind(FmTrack track, boolean isPlaying) {
+        void bind(FmTrack track, boolean isCurrentPlaying, boolean isActuallyPlaying) {
             // 设置标题 / 副标题
             tvTrackTitle.setText(track.getTitle());
             tvTrackSubtitle.setText(track.getSubtitle());
 
             // 根据是否正在播放切换按钮文案
             // 这里只改文案，真正的播放 / 暂停逻辑在 Activity 里
-            btnPlayPause.setText(isPlaying ? "⏸ 暂停" : "▶ 播放");
+            if (!isCurrentPlaying) {
+                btnPlayPause.setText("▶ 播放");
+            } else if (isActuallyPlaying) {
+                btnPlayPause.setText("⏸ 暂停");
+            } else {
+                btnPlayPause.setText("▶ 继续");
+            }
         }
     }
 }

@@ -2,6 +2,9 @@ package com.justyn.meow.cat;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -9,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.justyn.meow.R;
 
 import java.util.ArrayList;
@@ -22,6 +26,29 @@ public class CatFmActivity extends AppCompatActivity {
     // 真正负责播放音频的 MediaPlayer
     private MediaPlayer mediaPlayer;
 
+    private SeekBar seekBar;
+    private MaterialButton btnPlayPauseControl;
+    private MaterialButton btnForward;
+    private MaterialButton btnRewind;
+
+    private final Handler progressHandler = new Handler(Looper.getMainLooper());
+
+    private boolean isUserSeeking = false;
+
+    private static final int SKIP_STEP_MS = 10_000;
+
+    private final Runnable progressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                if (!isUserSeeking) {
+                    seekBar.setProgress(mediaPlayer.getCurrentPosition());
+                }
+                progressHandler.postDelayed(this, 500);
+            }
+        }
+    };
+
     // 当前正在播放的列表下标（-1 / NO_POSITION 表示没有在播）
     private int currentPlayingPosition = RecyclerView.NO_POSITION;
 
@@ -31,6 +58,11 @@ public class CatFmActivity extends AppCompatActivity {
         // 开启 EdgeToEdge，让内容可以延伸到状态栏 / 导航栏区域
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cat_fm);
+
+        seekBar = findViewById(R.id.seekBar);
+        btnPlayPauseControl = findViewById(R.id.btnPlayPauseControl);
+        btnForward = findViewById(R.id.btnForward);
+        btnRewind = findViewById(R.id.btnRewind);
 
         // 1. 找到 RecyclerView，并设置垂直线性布局
         RecyclerView rvTracks = findViewById(R.id.rvTracks);
@@ -42,6 +74,9 @@ public class CatFmActivity extends AppCompatActivity {
         // 3. 创建适配器，并把「点击某条播放」的回调交给 handlePlayClick
         adapter = new CatFmAdapter(trackList, this::handlePlayClick);
         rvTracks.setAdapter(adapter);
+
+        setupPlaybackControls();
+        setPlaybackControlsEnabled(false);
     }
 
     /**
@@ -74,6 +109,37 @@ public class CatFmActivity extends AppCompatActivity {
     }
 
     /**
+     * 初始化底部播放控制区域
+     */
+    private void setupPlaybackControls() {
+        btnPlayPauseControl.setOnClickListener(v -> togglePlayPause());
+        btnForward.setOnClickListener(v -> seekBy(SKIP_STEP_MS));
+        btnRewind.setOnClickListener(v -> seekBy(-SKIP_STEP_MS));
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // 这里不需要额外处理，真正的跳转逻辑在 onStopTrackingTouch
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isUserSeeking = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (mediaPlayer != null) {
+                    mediaPlayer.seekTo(seekBar.getProgress());
+                } else {
+                    seekBar.setProgress(0);
+                }
+                isUserSeeking = false;
+            }
+        });
+    }
+
+    /**
      * 处理每一条「播放 / 暂停」点击逻辑
      * <p>
      * 规则：
@@ -93,12 +159,8 @@ public class CatFmActivity extends AppCompatActivity {
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.stop();
             }
-            // 释放播放器资源
             releasePlayer();
-            // 状态改为“没有任何一条在播放”
-            currentPlayingPosition = RecyclerView.NO_POSITION;
-            // 通知适配器刷新，所有按钮恢复为「▶ 播放」
-            adapter.updatePlayingPosition(RecyclerView.NO_POSITION);
+            resetPlaybackUi();
             return;
         }
 
@@ -112,30 +174,111 @@ public class CatFmActivity extends AppCompatActivity {
         mediaPlayer = MediaPlayer.create(this, track.getResId());
         if (mediaPlayer == null) {
             Toast.makeText(this, "喵～音频初始化失败了", Toast.LENGTH_SHORT).show();
+            resetPlaybackUi();
             return;
         }
 
         // 更新当前正在播放的 position
         currentPlayingPosition = position;
         // 通知 Adapter：哪一条要高亮为“正在播放”（按钮显示「⏸ 暂停」）
-        adapter.updatePlayingPosition(position);
+        adapter.updatePlayingState(position, true);
+        prepareSeekBarForMediaPlayer();
+        setPlaybackControlsEnabled(true);
+        btnPlayPauseControl.setText("⏸ 暂停");
 
         // 播放完成后的回调：
         // 自动把状态重置为“无播放”，并刷新 UI
         mediaPlayer.setOnCompletionListener(mp -> {
-            currentPlayingPosition = RecyclerView.NO_POSITION;
-            adapter.updatePlayingPosition(RecyclerView.NO_POSITION);
             releasePlayer();
+            resetPlaybackUi();
         });
 
         // 开始播放音频
         mediaPlayer.start();
+        startProgressUpdates();
+    }
+
+    /**
+     * 底部播放/暂停按钮
+     */
+    private void togglePlayPause() {
+        if (mediaPlayer == null) {
+            Toast.makeText(this, "先从列表里选一条喵播吧～", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+            adapter.updatePlayingState(currentPlayingPosition, false);
+            btnPlayPauseControl.setText("▶ 继续");
+            stopProgressUpdates();
+        } else {
+            mediaPlayer.start();
+            adapter.updatePlayingState(currentPlayingPosition, true);
+            btnPlayPauseControl.setText("⏸ 暂停");
+            startProgressUpdates();
+        }
+    }
+
+    /**
+     * 快进 / 快退
+     */
+    private void seekBy(int deltaMs) {
+        if (mediaPlayer == null) {
+            return;
+        }
+        int target = mediaPlayer.getCurrentPosition() + deltaMs;
+        target = Math.max(0, Math.min(target, mediaPlayer.getDuration()));
+        mediaPlayer.seekTo(target);
+        seekBar.setProgress(target);
+    }
+
+    /**
+     * 设置进度条最大值与初始值
+     */
+    private void prepareSeekBarForMediaPlayer() {
+        if (mediaPlayer == null) {
+            return;
+        }
+        seekBar.setMax(mediaPlayer.getDuration());
+        seekBar.setProgress(0);
+    }
+
+    private void startProgressUpdates() {
+        stopProgressUpdates();
+        progressHandler.post(progressRunnable);
+    }
+
+    private void stopProgressUpdates() {
+        progressHandler.removeCallbacks(progressRunnable);
+    }
+
+    private void resetSeekBar() {
+        seekBar.setProgress(0);
+        seekBar.setMax(0);
+    }
+
+    private void setPlaybackControlsEnabled(boolean enabled) {
+        seekBar.setEnabled(enabled);
+        btnPlayPauseControl.setEnabled(enabled);
+        btnForward.setEnabled(enabled);
+        btnRewind.setEnabled(enabled);
+    }
+
+    private void resetPlaybackUi() {
+        currentPlayingPosition = RecyclerView.NO_POSITION;
+        if (adapter != null) {
+            adapter.updatePlayingState(RecyclerView.NO_POSITION, false);
+        }
+        resetSeekBar();
+        setPlaybackControlsEnabled(false);
+        btnPlayPauseControl.setText("▶ 播放");
     }
 
     /**
      * 安全释放 MediaPlayer 资源，防止内存泄漏 / 占用系统资源
      */
     private void releasePlayer() {
+        stopProgressUpdates();
         if (mediaPlayer != null) {
             try {
                 // reset 不是必须，但有些机型上更稳妥
@@ -155,10 +298,7 @@ public class CatFmActivity extends AppCompatActivity {
         // 1. 停止播放
         // 2. 重置当前播放标记
         // 3. 通知列表恢复按钮文案
-        currentPlayingPosition = RecyclerView.NO_POSITION;
-        if (adapter != null) {
-            adapter.updatePlayingPosition(RecyclerView.NO_POSITION);
-        }
         releasePlayer();
+        resetPlaybackUi();
     }
 }
