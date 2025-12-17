@@ -20,7 +20,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -32,12 +33,11 @@ android {
 
 dependencies {
     implementation libs.appcompat
-    implementation libs.material
+    implementation libs.material.v1130
     implementation libs.activity
     implementation libs.constraintlayout
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
-    implementation libs.material.v1130
     implementation libs.recyclerview
 }
