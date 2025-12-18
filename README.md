@@ -3,6 +3,9 @@
 ## 项目简介
 Meow 是一款面向猫咪爱好者的轻量级 Android 应用，集登录/注册、猫咪档案、图片墙、内置百科与本地 FM 播放于一体，帮助用户在离线场景下也能「云吸猫」。项目以课程设计为起点，突出 Activity + RecyclerView/Adapter + SQLite + 多媒体播放等常见场景，适合作为入门示例或课程作品展示。
 
+<img width="1920" height="842" alt="Meow界面截图" src="https://github.com/user-attachments/assets/acfa327e-9e8d-402b-b2bb-a59ab3b76433" />
+
+
 Android 工程位于仓库子目录 `Meow/`，所有功能集中在单模块 `:app`。应用内容资源全部内置（`res/drawable` 猫图、`res/raw` 音频、`assets/cat_wiki.html` 百科等），功能体验不依赖外网；但首次 Gradle 同步/构建仍需要联网下载依赖与 Gradle Wrapper。
 
 首页（登录后）提供登录状态展示、功能入口卡片，以及基于 `SharedPreferences` 的「撸猫打卡」连续天数统计。
