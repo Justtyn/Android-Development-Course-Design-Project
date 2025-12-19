@@ -19,21 +19,29 @@ import java.util.List;
  */
 public class CatProfileAdapter extends RecyclerView.Adapter<CatProfileAdapter.CatViewHolder> {
 
-    private final List<CatProfile> data;
+    private List<CatProfile> data;
 
     /**
-     * 可选：列表 item 点击回调接口
-     * 后面如果你要点一只猫进入“猫咪详情页”，可以用到
+     * 列表交互回调
      */
-    public interface OnCatClickListener {
-        void onCatClicked(CatProfile profile, int position);
+    public interface Listener {
+        void onAddClicked();
+
+        void onItemClicked(CatProfile profile);
+
+        void onItemLongPressed(CatProfile profile);
     }
 
-    private final OnCatClickListener listener;
+    private final Listener listener;
 
-    public CatProfileAdapter(List<CatProfile> data, OnCatClickListener listener) {
+    public CatProfileAdapter(List<CatProfile> data, Listener listener) {
         this.data = data;
         this.listener = listener;
+    }
+
+    public void submitList(List<CatProfile> newData) {
+        this.data = newData;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -47,16 +55,32 @@ public class CatProfileAdapter extends RecyclerView.Adapter<CatProfileAdapter.Ca
     @Override
     public void onBindViewHolder(@NonNull CatViewHolder holder, int position) {
         CatProfile profile = data.get(position);
+        if (profile.isAddEntry()) {
+            holder.bindAsAddEntry();
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onAddClicked();
+                }
+            });
+            holder.itemView.setOnLongClickListener(v -> true);
+            return;
+        }
+
         holder.bind(profile);
 
-        // 整个卡片点击
+        // 单击：保留原来的点击反馈（Toast 由 Activity 处理）
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
-                int adapterPos = holder.getAdapterPosition();
-                if (adapterPos != RecyclerView.NO_POSITION) {
-                    listener.onCatClicked(profile, adapterPos);
-                }
+                listener.onItemClicked(profile);
             }
+        });
+
+        // 长按：弹出操作（编辑/删除）
+        holder.itemView.setOnLongClickListener(v -> {
+            if (listener != null) {
+                listener.onItemLongPressed(profile);
+            }
+            return true;
         });
     }
 
@@ -83,11 +107,24 @@ public class CatProfileAdapter extends RecyclerView.Adapter<CatProfileAdapter.Ca
         }
 
         void bind(CatProfile profile) {
-            imgCatAvatar.setImageResource(profile.getAvatarResId());
+            imgCatAvatar.setImageURI(null);
+            if (profile.getAvatarUri() != null) {
+                imgCatAvatar.setImageURI(android.net.Uri.parse(profile.getAvatarUri()));
+            } else {
+                imgCatAvatar.setImageResource(profile.getAvatarResId());
+            }
             tvCatName.setText(profile.getName());
             tvCatBreed.setText(profile.getBreed());
             tvCatAge.setText(profile.getAge());
             tvCatIntro.setText(profile.getIntro());
+        }
+
+        void bindAsAddEntry() {
+            imgCatAvatar.setImageResource(R.drawable.ic_meow_add);
+            tvCatName.setText("添加猫咪");
+            tvCatBreed.setText("点击新增档案");
+            tvCatAge.setText("");
+            tvCatIntro.setText("支持长按编辑、删除哦～");
         }
     }
 }

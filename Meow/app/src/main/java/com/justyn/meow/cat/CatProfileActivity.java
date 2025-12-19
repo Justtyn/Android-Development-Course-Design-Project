@@ -1,20 +1,38 @@
 package com.justyn.meow.cat;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
 import com.justyn.meow.R;
+import com.justyn.meow.data.MeowDbHelper;
+import com.justyn.meow.util.MeowPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CatProfileActivity extends AppCompatActivity {
 
+    private MeowDbHelper dbHelper;
+    private CatProfileAdapter adapter;
+    private TextInputEditText etSearch;
+
+    private interface UriReceiver {
+        void onPicked(Uri uri);
+    }
+
+    private ActivityResultLauncher<String[]> imagePickerLauncher;
+    private UriReceiver pendingImageReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,22 +40,260 @@ public class CatProfileActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cat_profile);
 
+        dbHelper = new MeowDbHelper(this);
+
+        etSearch = findViewById(R.id.etSearch);
+
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(),
+                uri -> {
+                    if (uri == null) {
+                        return;
+                    }
+                    persistReadPermission(uri);
+                    if (pendingImageReceiver != null) {
+                        pendingImageReceiver.onPicked(uri);
+                    }
+                }
+        );
+
         RecyclerView rvCatList = findViewById(R.id.rvTracks);
         rvCatList.setLayoutManager(new LinearLayoutManager(this));
 
-        // 用本地构造的猫咪列表数据
-        List<CatProfile> profiles = buildLocalCatProfiles();
+        seedDefaultProfilesIfNeeded();
 
-        // 适配器 + 简单点击事件（先 Toast，后面你想扩展详情页再说）
-        CatProfileAdapter adapter = new CatProfileAdapter(profiles, (profile, position) -> {
-            Toast.makeText(
-                    CatProfileActivity.this,
-                    "喵～你点了：「" + profile.getName() + "」",
-                    Toast.LENGTH_SHORT
-            ).show();
+        adapter = new CatProfileAdapter(new ArrayList<>(), new CatProfileAdapter.Listener() {
+            @Override
+            public void onAddClicked() {
+                showAddDialog();
+            }
+
+            @Override
+            public void onItemClicked(CatProfile profile) {
+                Toast.makeText(
+                        CatProfileActivity.this,
+                        "喵～你点了：「" + profile.getName() + "」",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+
+            @Override
+            public void onItemLongPressed(CatProfile profile) {
+                showActionsDialog(profile);
+            }
         });
 
         rvCatList.setAdapter(adapter);
+
+        reloadList(null);
+
+        etSearch.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                reloadList(s == null ? null : s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+            }
+        });
+    }
+
+    private void seedDefaultProfilesIfNeeded() {
+        if (MeowPreferences.isCatProfileSeeded(this)) {
+            return;
+        }
+        if (dbHelper.hasAnyCatProfiles()) {
+            MeowPreferences.markCatProfileSeeded(this);
+            return;
+        }
+        List<CatProfile> defaults = buildLocalCatProfiles();
+        for (CatProfile profile : defaults) {
+            dbHelper.insertCatProfile(
+                    profile.getName(),
+                    profile.getAge(),
+                    profile.getBreed(),
+                    profile.getIntro(),
+                    profile.getAvatarResId(),
+                    null
+            );
+        }
+        MeowPreferences.markCatProfileSeeded(this);
+    }
+
+    private void reloadList(String titleQuery) {
+        List<CatProfile> profiles = dbHelper.queryCatProfiles(titleQuery);
+        profiles.add(CatProfile.addEntry());
+        adapter.submitList(profiles);
+    }
+
+    private void showAddDialog() {
+        android.view.View view = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_cat_profile, null);
+        android.widget.ImageView imgAvatar = view.findViewById(R.id.imgAvatar);
+        com.google.android.material.button.MaterialButton btnPickAvatar = view.findViewById(R.id.btnPickAvatar);
+        TextInputEditText etTitle = view.findViewById(R.id.etTitle);
+        TextInputEditText etAge = view.findViewById(R.id.etAge);
+        TextInputEditText etPersonality = view.findViewById(R.id.etPersonality);
+        TextInputEditText etDescription = view.findViewById(R.id.etDescription);
+
+        final Uri[] selectedAvatarUri = new Uri[]{null};
+
+        btnPickAvatar.setOnClickListener(v -> {
+            pendingImageReceiver = uri -> {
+                selectedAvatarUri[0] = uri;
+                imgAvatar.setImageURI(uri);
+            };
+            imagePickerLauncher.launch(new String[]{"image/*"});
+        });
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle("新增猫咪档案")
+                .setView(view)
+                .setNegativeButton("取消", (d, which) -> {
+                })
+                .setPositiveButton("保存", null);
+
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.setOnDismissListener(d -> pendingImageReceiver = null);
+        dialog.show();
+
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String title = safeText(etTitle);
+            if (title.isEmpty()) {
+                Toast.makeText(this, "名称不能为空喵～", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String age = safeText(etAge);
+            String personality = safeText(etPersonality);
+            String description = safeText(etDescription);
+
+            Integer avatarResId = null;
+            String avatarUri = null;
+            if (selectedAvatarUri[0] != null) {
+                avatarUri = selectedAvatarUri[0].toString();
+            } else {
+                avatarResId = R.drawable.logo;
+            }
+
+            dbHelper.insertCatProfile(title, age, personality, description, avatarResId, avatarUri);
+            reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
+            dialog.dismiss();
+        });
+    }
+
+    private void showEditDialog(CatProfile profile) {
+        android.view.View view = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_cat_profile, null);
+        android.widget.ImageView imgAvatar = view.findViewById(R.id.imgAvatar);
+        com.google.android.material.button.MaterialButton btnPickAvatar = view.findViewById(R.id.btnPickAvatar);
+        TextInputEditText etTitle = view.findViewById(R.id.etTitle);
+        TextInputEditText etAge = view.findViewById(R.id.etAge);
+        TextInputEditText etPersonality = view.findViewById(R.id.etPersonality);
+        TextInputEditText etDescription = view.findViewById(R.id.etDescription);
+
+        etTitle.setText(profile.getName());
+        etAge.setText(profile.getAge());
+        etPersonality.setText(profile.getBreed());
+        etDescription.setText(profile.getIntro());
+
+        if (profile.getAvatarUri() != null) {
+            imgAvatar.setImageURI(Uri.parse(profile.getAvatarUri()));
+        } else if (profile.getAvatarResId() != 0) {
+            imgAvatar.setImageResource(profile.getAvatarResId());
+        }
+
+        final Uri[] selectedAvatarUri = new Uri[]{null};
+
+        btnPickAvatar.setOnClickListener(v -> {
+            pendingImageReceiver = uri -> {
+                selectedAvatarUri[0] = uri;
+                imgAvatar.setImageURI(uri);
+            };
+            imagePickerLauncher.launch(new String[]{"image/*"});
+        });
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle("编辑猫咪档案")
+                .setView(view)
+                .setNegativeButton("取消", (d, which) -> {
+                })
+                .setPositiveButton("保存", null);
+
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.setOnDismissListener(d -> pendingImageReceiver = null);
+        dialog.show();
+
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String title = safeText(etTitle);
+            if (title.isEmpty()) {
+                Toast.makeText(this, "名称不能为空喵～", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String age = safeText(etAge);
+            String personality = safeText(etPersonality);
+            String description = safeText(etDescription);
+
+            Integer avatarResId = null;
+            String avatarUri = null;
+            if (selectedAvatarUri[0] != null) {
+                avatarUri = selectedAvatarUri[0].toString();
+            } else if (profile.getAvatarUri() != null) {
+                avatarUri = profile.getAvatarUri();
+            } else if (profile.getAvatarResId() != 0) {
+                avatarResId = profile.getAvatarResId();
+            }
+
+            dbHelper.updateCatProfile(profile.getId(), title, age, personality, description, avatarResId, avatarUri);
+            reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
+            dialog.dismiss();
+        });
+    }
+
+    private void showDeleteDialog(CatProfile profile) {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("删除")
+                .setMessage("确定删除「" + profile.getName() + "」吗？")
+                .setNegativeButton("取消", (d, which) -> {
+                })
+                .setPositiveButton("删除", (d, which) -> {
+                    dbHelper.deleteCatProfile(profile.getId());
+                    reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
+                    Toast.makeText(this, "已删除喵～", Toast.LENGTH_SHORT).show();
+                })
+                .show();
+    }
+
+    private void showActionsDialog(CatProfile profile) {
+        String[] items = new String[]{"编辑", "删除"};
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(profile.getName())
+                .setItems(items, (dialog, which) -> {
+                    if (which == 0) {
+                        showEditDialog(profile);
+                    } else if (which == 1) {
+                        showDeleteDialog(profile);
+                    }
+                })
+                .setNegativeButton("取消", (d, w) -> {
+                })
+                .show();
+    }
+
+    private static String safeText(TextInputEditText editText) {
+        if (editText.getText() == null) {
+            return "";
+        }
+        return editText.getText().toString().trim();
+    }
+
+    private void persistReadPermission(Uri uri) {
+        try {
+            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException ignored) {
+        }
     }
 
     private List<CatProfile> buildLocalCatProfiles() {

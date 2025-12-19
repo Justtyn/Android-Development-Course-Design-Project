@@ -1,6 +1,9 @@
 package com.justyn.meow.cat;
 
+import android.content.Intent;
+import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,12 +11,18 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
 import com.justyn.meow.R;
+import com.justyn.meow.data.MeowDbHelper;
+import com.justyn.meow.util.MeowPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +31,16 @@ public class CatFmActivity extends AppCompatActivity {
 
     // 音频列表的适配器
     private CatFmAdapter adapter;
+
+    private MeowDbHelper dbHelper;
+    private TextInputEditText etSearch;
+
+    private interface UriReceiver {
+        void onPicked(Uri uri);
+    }
+
+    private ActivityResultLauncher<String[]> audioPickerLauncher;
+    private UriReceiver pendingAudioReceiver;
 
     // 真正负责播放音频的 MediaPlayer
     private MediaPlayer mediaPlayer;
@@ -51,6 +70,7 @@ public class CatFmActivity extends AppCompatActivity {
 
     // 当前正在播放的列表下标（-1 / NO_POSITION 表示没有在播）
     private int currentPlayingPosition = RecyclerView.NO_POSITION;
+    private long currentPlayingTrackId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +78,22 @@ public class CatFmActivity extends AppCompatActivity {
         // 开启 EdgeToEdge，让内容可以延伸到状态栏 / 导航栏区域
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cat_fm);
+
+        dbHelper = new MeowDbHelper(this);
+        etSearch = findViewById(R.id.etSearch);
+
+        audioPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(),
+                uri -> {
+                    if (uri == null) {
+                        return;
+                    }
+                    persistReadPermission(uri);
+                    if (pendingAudioReceiver != null) {
+                        pendingAudioReceiver.onPicked(uri);
+                    }
+                }
+        );
 
         seekBar = findViewById(R.id.seekBar);
         btnPlayPauseControl = findViewById(R.id.btnPlayPauseControl);
@@ -68,15 +104,69 @@ public class CatFmActivity extends AppCompatActivity {
         RecyclerView rvTracks = findViewById(R.id.rvTracks);
         rvTracks.setLayoutManager(new LinearLayoutManager(this));
 
-        // 2. 构造 FM 音频列表（使用本地 raw 资源）
-        List<FmTrack> trackList = buildTrackList();
+        seedDefaultTracksIfNeeded();
 
-        // 3. 创建适配器，并把「点击某条播放」的回调交给 handlePlayClick
-        adapter = new CatFmAdapter(trackList, this::handlePlayClick);
+        adapter = new CatFmAdapter(new ArrayList<>(), new CatFmAdapter.Listener() {
+            @Override
+            public void onAddClicked() {
+                showAddDialog();
+            }
+
+            @Override
+            public void onPlayClicked(FmTrack track, int position) {
+                handlePlayClick(track, position);
+            }
+
+            @Override
+            public void onItemLongPressed(FmTrack track) {
+                showActionsDialog(track);
+            }
+        });
         rvTracks.setAdapter(adapter);
+
+        reloadList(null);
+
+        etSearch.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                reloadList(s == null ? null : s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+            }
+        });
 
         setupPlaybackControls();
         setPlaybackControlsEnabled(false);
+    }
+
+    private void seedDefaultTracksIfNeeded() {
+        if (MeowPreferences.isFmSeeded(this)) {
+            return;
+        }
+        if (dbHelper.hasAnyFmTracks()) {
+            MeowPreferences.markFmSeeded(this);
+            return;
+        }
+        List<FmTrack> defaults = buildTrackList();
+        for (FmTrack track : defaults) {
+            dbHelper.insertFmTrack(track.getTitle(), track.getSubtitle(), track.getResId(), null);
+        }
+        MeowPreferences.markFmSeeded(this);
+    }
+
+    private void reloadList(String titleQuery) {
+        releasePlayer();
+        resetPlaybackUi();
+
+        List<FmTrack> tracks = dbHelper.queryFmTracks(titleQuery);
+        tracks.add(FmTrack.addEntry());
+        adapter.submitList(tracks);
     }
 
     /**
@@ -154,6 +244,9 @@ public class CatFmActivity extends AppCompatActivity {
      * @param position 在列表中的位置
      */
     private void handlePlayClick(FmTrack track, int position) {
+        if (track == null || track.isAddEntry()) {
+            return;
+        }
         // 情况一：点击的是当前正在播放的那一条 → 停止播放
         if (mediaPlayer != null && currentPlayingPosition == position) {
             if (mediaPlayer.isPlaying()) {
@@ -171,7 +264,11 @@ public class CatFmActivity extends AppCompatActivity {
         }
 
         // 为当前点击的音频创建新的 MediaPlayer
-        mediaPlayer = MediaPlayer.create(this, track.getResId());
+        if (track.getAudioUri() != null) {
+            mediaPlayer = MediaPlayer.create(this, Uri.parse(track.getAudioUri()));
+        } else {
+            mediaPlayer = MediaPlayer.create(this, track.getResId());
+        }
         if (mediaPlayer == null) {
             Toast.makeText(this, "喵～音频初始化失败了", Toast.LENGTH_SHORT).show();
             resetPlaybackUi();
@@ -180,6 +277,7 @@ public class CatFmActivity extends AppCompatActivity {
 
         // 更新当前正在播放的 position
         currentPlayingPosition = position;
+        currentPlayingTrackId = track.getId();
         // 通知 Adapter：哪一条要高亮为“正在播放”（按钮显示「⏸ 暂停」）
         adapter.updatePlayingState(position, true);
         prepareSeekBarForMediaPlayer();
@@ -203,7 +301,7 @@ public class CatFmActivity extends AppCompatActivity {
      */
     private void togglePlayPause() {
         if (mediaPlayer == null) {
-            Toast.makeText(this, "先从列表里选一条喵播吧～", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "先从列表里选一条喵音播放吧～", Toast.LENGTH_SHORT).show();
             return;
         }
         if (mediaPlayer.isPlaying()) {
@@ -266,6 +364,7 @@ public class CatFmActivity extends AppCompatActivity {
 
     private void resetPlaybackUi() {
         currentPlayingPosition = RecyclerView.NO_POSITION;
+        currentPlayingTrackId = -1;
         if (adapter != null) {
             adapter.updatePlayingState(RecyclerView.NO_POSITION, false);
         }
@@ -300,5 +399,158 @@ public class CatFmActivity extends AppCompatActivity {
         // 3. 通知列表恢复按钮文案
         releasePlayer();
         resetPlaybackUi();
+    }
+
+    private void showAddDialog() {
+        android.view.View view = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_fm_track, null);
+        TextInputEditText etTitle = view.findViewById(R.id.etTitle);
+        TextInputEditText etSubtitle = view.findViewById(R.id.etSubtitle);
+        com.google.android.material.button.MaterialButton btnPickAudio = view.findViewById(R.id.btnPickAudio);
+        android.widget.TextView tvAudioSelected = view.findViewById(R.id.tvAudioSelected);
+
+        final Uri[] selectedAudioUri = new Uri[]{null};
+
+        btnPickAudio.setOnClickListener(v -> {
+            pendingAudioReceiver = uri -> {
+                selectedAudioUri[0] = uri;
+                tvAudioSelected.setText("已选择：" + getDisplayName(uri));
+            };
+            audioPickerLauncher.launch(new String[]{"audio/*"});
+        });
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle("新增喵音")
+                .setView(view)
+                .setNegativeButton("取消", (d, which) -> {
+                })
+                .setPositiveButton("保存", null);
+
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.setOnDismissListener(d -> pendingAudioReceiver = null);
+        dialog.show();
+
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String title = safeText(etTitle);
+            if (title.isEmpty()) {
+                Toast.makeText(this, "标题不能为空喵～", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (selectedAudioUri[0] == null) {
+                Toast.makeText(this, "请先选择音频喵～", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String subtitle = safeText(etSubtitle);
+            dbHelper.insertFmTrack(title, subtitle, null, selectedAudioUri[0].toString());
+            reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
+            dialog.dismiss();
+        });
+    }
+
+    private void showEditDialog(FmTrack track) {
+        android.view.View view = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_fm_track, null);
+        TextInputEditText etTitle = view.findViewById(R.id.etTitle);
+        TextInputEditText etSubtitle = view.findViewById(R.id.etSubtitle);
+        com.google.android.material.button.MaterialButton btnPickAudio = view.findViewById(R.id.btnPickAudio);
+        android.widget.TextView tvAudioSelected = view.findViewById(R.id.tvAudioSelected);
+
+        etTitle.setText(track.getTitle());
+        etSubtitle.setText(track.getSubtitle());
+
+        btnPickAudio.setEnabled(false);
+        btnPickAudio.setText("咪音不可更换");
+        if (track.getAudioUri() != null) {
+            tvAudioSelected.setText("音频已锁定：" + getDisplayName(Uri.parse(track.getAudioUri())));
+        } else {
+            tvAudioSelected.setText("该咪音不可更换哦～");
+        }
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle("编辑喵音")
+                .setView(view)
+                .setNegativeButton("取消", (d, which) -> {
+                })
+                .setPositiveButton("保存", null);
+
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String title = safeText(etTitle);
+            if (title.isEmpty()) {
+                Toast.makeText(this, "标题不能为空喵～", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            String subtitle = safeText(etSubtitle);
+            dbHelper.updateFmTrack(track.getId(), title, subtitle);
+            reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
+            dialog.dismiss();
+        });
+    }
+
+    private void showDeleteDialog(FmTrack track) {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("删除")
+                .setMessage("确定删除「" + track.getTitle() + "」吗？")
+                .setNegativeButton("取消", (d, which) -> {
+                })
+                .setPositiveButton("删除", (d, which) -> {
+                    if (currentPlayingTrackId == track.getId()) {
+                        releasePlayer();
+                        resetPlaybackUi();
+                    }
+                    dbHelper.deleteFmTrack(track.getId());
+                    reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
+                    Toast.makeText(this, "已删除喵～", Toast.LENGTH_SHORT).show();
+                })
+                .show();
+    }
+
+    private void showActionsDialog(FmTrack track) {
+        String[] items = new String[]{"编辑", "删除"};
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(track.getTitle())
+                .setItems(items, (dialog, which) -> {
+                    if (which == 0) {
+                        showEditDialog(track);
+                    } else if (which == 1) {
+                        showDeleteDialog(track);
+                    }
+                })
+                .setNegativeButton("取消", (d, w) -> {
+                })
+                .show();
+    }
+
+    private static String safeText(TextInputEditText editText) {
+        if (editText.getText() == null) {
+            return "";
+        }
+        return editText.getText().toString().trim();
+    }
+
+    private void persistReadPermission(Uri uri) {
+        try {
+            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException ignored) {
+        }
+    }
+
+    private String getDisplayName(Uri uri) {
+        Cursor cursor = null;
+        try {
+            cursor = getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+                if (index >= 0) {
+                    return cursor.getString(index);
+                }
+            }
+        } catch (Exception ignored) {
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return uri.toString();
     }
 }

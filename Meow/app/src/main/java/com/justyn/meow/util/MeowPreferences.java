@@ -9,6 +9,8 @@ public class MeowPreferences {
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_USERNAME = "current_username";
     private static final String KEY_NICKNAME = "current_nickname";
+    private static final String KEY_SEEDED_FM = "seeded_fm";
+    private static final String KEY_SEEDED_CAT_PROFILE = "seeded_cat_profile";
 
     // 获取 SharedPreferences 实例
     private static SharedPreferences getPrefs(Context context) {
@@ -52,5 +54,21 @@ public class MeowPreferences {
 
     public static String getNickname(Context context) {
         return getPrefs(context).getString(KEY_NICKNAME, null);
+    }
+
+    public static boolean isFmSeeded(Context context) {
+        return getPrefs(context).getBoolean(KEY_SEEDED_FM, false);
+    }
+
+    public static void markFmSeeded(Context context) {
+        getPrefs(context).edit().putBoolean(KEY_SEEDED_FM, true).apply();
+    }
+
+    public static boolean isCatProfileSeeded(Context context) {
+        return getPrefs(context).getBoolean(KEY_SEEDED_CAT_PROFILE, false);
+    }
+
+    public static void markCatProfileSeeded(Context context) {
+        getPrefs(context).edit().putBoolean(KEY_SEEDED_CAT_PROFILE, true).apply();
     }
 }

@@ -18,25 +18,34 @@ import java.util.List;
 public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder> {
 
     /**
-     * 点击某一条音频时，对外暴露的回调接口
-     * Activity 里拿到 track 和 position 决定是播放还是暂停
+     * 列表交互回调
      */
-    public interface OnTrackClickListener {
+    public interface Listener {
+        void onAddClicked();
+
         void onPlayClicked(FmTrack track, int position);
+
+        void onItemLongPressed(FmTrack track);
     }
 
     // 音频列表条目数据
-    private final List<FmTrack> data;
+    private List<FmTrack> data;
     // 由 Activity 传进来的点击回调
-    private final OnTrackClickListener listener;
+    private final Listener listener;
 
     // 当前正在播放的 position（默认 NO_POSITION = -1，表示没有正在播放）
     private int playingPosition = RecyclerView.NO_POSITION;
     private boolean isPlaying;
 
-    public CatFmAdapter(List<FmTrack> data, OnTrackClickListener listener) {
+    public CatFmAdapter(List<FmTrack> data, Listener listener) {
         this.data = data;
         this.listener = listener;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void submitList(List<FmTrack> newData) {
+        this.data = newData;
+        notifyDataSetChanged();
     }
 
     /**
@@ -73,6 +82,23 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
     public void onBindViewHolder(@NonNull FmViewHolder holder, int position) {
         // 绑定数据
         FmTrack track = data.get(position);
+        if (track.isAddEntry()) {
+            holder.bindAsAddEntry();
+
+            holder.btnPlayPause.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onAddClicked();
+                }
+            });
+            holder.cardTrack.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onAddClicked();
+                }
+            });
+            holder.cardTrack.setOnLongClickListener(v -> true);
+            return;
+        }
+
         // 判断这一条是不是当前正在播放的那一条
         boolean isPlaying = (position == playingPosition);
 
@@ -83,7 +109,7 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
         holder.btnPlayPause.setOnClickListener(v -> {
             if (listener != null) {
                 // 再拿一次 adapterPosition，避免下标过期
-                int adapterPos = holder.getAdapterPosition();
+                int adapterPos = holder.getBindingAdapterPosition();
                 if (adapterPos != RecyclerView.NO_POSITION) {
                     // 把当前条目的 track + 位置抛给 Activity
                     listener.onPlayClicked(track, adapterPos);
@@ -91,14 +117,22 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
             }
         });
 
-        // 整个卡片点击也触发同样的逻辑
+        // 整个卡片点击：与之前一致（点击条目播放/暂停）
         holder.cardTrack.setOnClickListener(v -> {
             if (listener != null) {
-                int adapterPos = holder.getAdapterPosition();
+                int adapterPos = holder.getBindingAdapterPosition();
                 if (adapterPos != RecyclerView.NO_POSITION) {
                     listener.onPlayClicked(track, adapterPos);
                 }
             }
+        });
+
+        // 长按：弹出操作（编辑/删除）
+        holder.cardTrack.setOnLongClickListener(v -> {
+            if (listener != null) {
+                listener.onItemLongPressed(track);
+            }
+            return true;
         });
     }
 
@@ -145,6 +179,12 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
             } else {
                 btnPlayPause.setText("▶ 继续");
             }
+        }
+
+        void bindAsAddEntry() {
+            tvTrackTitle.setText("添加喵音");
+            tvTrackSubtitle.setText("长按可选择删除、编辑选项～");
+            btnPlayPause.setText("＋ 添加");
         }
     }
 }
