@@ -39,7 +39,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="16dp"
-        android:hint="搜索标题"
+        android:hint="搜索猫咪"
         app:boxBackgroundColor="@color/meow_surface"
         app:boxBackgroundMode="filled"
         app:boxCornerRadiusBottomEnd="16dp"

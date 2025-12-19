@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -46,6 +47,8 @@ public class CatFmActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
 
     private SeekBar seekBar;
+    private TextView tvCurrentTime;
+    private TextView tvTotalTime;
     private MaterialButton btnPlayPauseControl;
     private MaterialButton btnForward;
     private MaterialButton btnRewind;
@@ -61,7 +64,9 @@ public class CatFmActivity extends AppCompatActivity {
         public void run() {
             if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                 if (!isUserSeeking) {
-                    seekBar.setProgress(mediaPlayer.getCurrentPosition());
+                    int positionMs = mediaPlayer.getCurrentPosition();
+                    seekBar.setProgress(positionMs);
+                    tvCurrentTime.setText(formatTime(positionMs));
                 }
                 progressHandler.postDelayed(this, 500);
             }
@@ -96,9 +101,13 @@ public class CatFmActivity extends AppCompatActivity {
         );
 
         seekBar = findViewById(R.id.seekBar);
+        tvCurrentTime = findViewById(R.id.tvCurrentTime);
+        tvTotalTime = findViewById(R.id.tvTotalTime);
         btnPlayPauseControl = findViewById(R.id.btnPlayPauseControl);
         btnForward = findViewById(R.id.btnForward);
         btnRewind = findViewById(R.id.btnRewind);
+
+        resetTimeUi();
 
         // 1. 找到 RecyclerView，并设置垂直线性布局
         RecyclerView rvTracks = findViewById(R.id.rvTracks);
@@ -209,7 +218,9 @@ public class CatFmActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // 这里不需要额外处理，真正的跳转逻辑在 onStopTrackingTouch
+                if (fromUser) {
+                    tvCurrentTime.setText(formatTime(progress));
+                }
             }
 
             @Override
@@ -328,6 +339,7 @@ public class CatFmActivity extends AppCompatActivity {
         target = Math.max(0, Math.min(target, mediaPlayer.getDuration()));
         mediaPlayer.seekTo(target);
         seekBar.setProgress(target);
+        tvCurrentTime.setText(formatTime(target));
     }
 
     /**
@@ -339,6 +351,8 @@ public class CatFmActivity extends AppCompatActivity {
         }
         seekBar.setMax(mediaPlayer.getDuration());
         seekBar.setProgress(0);
+        tvTotalTime.setText(formatTime(mediaPlayer.getDuration()));
+        tvCurrentTime.setText(formatTime(0));
     }
 
     private void startProgressUpdates() {
@@ -355,6 +369,11 @@ public class CatFmActivity extends AppCompatActivity {
         seekBar.setMax(0);
     }
 
+    private void resetTimeUi() {
+        tvCurrentTime.setText(formatTime(0));
+        tvTotalTime.setText(formatTime(0));
+    }
+
     private void setPlaybackControlsEnabled(boolean enabled) {
         seekBar.setEnabled(enabled);
         btnPlayPauseControl.setEnabled(enabled);
@@ -369,6 +388,7 @@ public class CatFmActivity extends AppCompatActivity {
             adapter.updatePlayingState(RecyclerView.NO_POSITION, false);
         }
         resetSeekBar();
+        resetTimeUi();
         setPlaybackControlsEnabled(false);
         btnPlayPauseControl.setText("▶ 播放");
     }
@@ -552,5 +572,15 @@ public class CatFmActivity extends AppCompatActivity {
             }
         }
         return uri.toString();
+    }
+
+    private static String formatTime(int ms) {
+        if (ms < 0) {
+            ms = 0;
+        }
+        int totalSeconds = ms / 1000;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return String.format(java.util.Locale.getDefault(), "%02d:%02d", minutes, seconds);
     }
 }
