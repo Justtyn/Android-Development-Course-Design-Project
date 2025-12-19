@@ -11,14 +11,31 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.justyn.meow.R;
 import com.justyn.meow.data.MeowDbHelper;
 
+/**
+ * 注册页面：创建新用户并写入本地数据库。
+ * <p>
+ * 主要流程：
+ * - 输入校验（必填、两次密码一致）
+ * - 检查用户名是否重复
+ * - 写入数据库并提示结果
+ * </p>
+ */
 public class RegisterActivity extends AppCompatActivity {
 
+    // 数据库帮助类（注册时需要查重和写入）
     private MeowDbHelper dbHelper;
+    // 用户名输入框
     private TextInputEditText etUsername;
+    // 昵称输入框
     private TextInputEditText etNickname;
+    // 密码输入框
     private TextInputEditText etPassword;
+    // 再次确认密码输入框
     private TextInputEditText etConfirmPassword;
 
+    /**
+     * 初始化注册表单并绑定按钮事件。
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +58,13 @@ public class RegisterActivity extends AppCompatActivity {
         btnBackToLogin.setOnClickListener(v -> finish());
     }
 
+    /**
+     * 执行注册逻辑：
+     * - 读取输入内容
+     * - 判空、确认密码
+     * - 用户名查重
+     * - 写入数据库并提示结果
+     */
     private void doRegister() {
         // 先把输入框内容取出来，用户名/昵称顺便 trim
         // 密码保留原样，避免把用户输入的空格删掉

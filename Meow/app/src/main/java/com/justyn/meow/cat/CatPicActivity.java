@@ -12,8 +12,17 @@ import com.justyn.meow.R;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 猫图墙页面：用网格展示本地猫图集合。
+ * <p>
+ * 数据来源为本地 drawable 资源，使用 RecyclerView 网格布局展示。
+ * </p>
+ */
 public class CatPicActivity extends AppCompatActivity {
 
+    /**
+     * 初始化网格列表与数据源。
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +42,9 @@ public class CatPicActivity extends AppCompatActivity {
         rvCatPics.setAdapter(adapter);
     }
 
+    /**
+     * 构造本地猫图清单（图片资源 id + 标题）。
+     */
     private List<CatPic> buildLocalPicList() {
         List<CatPic> list = new ArrayList<>();
         list.add(new CatPic(R.drawable.siyue_1, "四月-仰望星空版"));

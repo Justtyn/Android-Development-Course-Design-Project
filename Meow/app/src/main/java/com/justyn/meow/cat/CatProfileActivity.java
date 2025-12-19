@@ -21,19 +21,37 @@ import com.justyn.meow.util.MeowPreferences;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 猫咪档案页面：展示列表、支持搜索、增删改，并允许选择头像。
+ * <p>
+ * 主要功能：
+ * - 读取/写入本地数据库
+ * - 支持标题关键字搜索
+ * - 通过系统图片选择器选择头像
+ * </p>
+ */
 public class CatProfileActivity extends AppCompatActivity {
 
+    // 数据库操作类
     private MeowDbHelper dbHelper;
+    // 列表适配器
     private CatProfileAdapter adapter;
+    // 搜索输入框
     private TextInputEditText etSearch;
 
+    // 临时回调：用于接收系统图片选择器的 Uri
     private interface UriReceiver {
         void onPicked(Uri uri);
     }
 
+    // 图片选择器
     private ActivityResultLauncher<String[]> imagePickerLauncher;
+    // 暂存回调（用于弹窗内选择头像后回填）
     private UriReceiver pendingImageReceiver;
 
+    /**
+     * 初始化列表、搜索与图片选择器。
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,6 +121,9 @@ public class CatProfileActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 初始化默认猫咪档案（仅第一次进入时写入）。
+     */
     private void seedDefaultProfilesIfNeeded() {
         if (MeowPreferences.isCatProfileSeeded(this)) {
             return;
@@ -125,12 +146,20 @@ public class CatProfileActivity extends AppCompatActivity {
         MeowPreferences.markCatProfileSeeded(this);
     }
 
+    /**
+     * 读取数据库并刷新列表。
+     *
+     * @param titleQuery 标题关键字，空表示不过滤
+     */
     private void reloadList(String titleQuery) {
         List<CatProfile> profiles = dbHelper.queryCatProfiles(titleQuery);
         profiles.add(CatProfile.addEntry());
         adapter.submitList(profiles);
     }
 
+    /**
+     * 弹出新增猫咪档案对话框。
+     */
     private void showAddDialog() {
         android.view.View view = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_cat_profile, null);
         android.widget.ImageView imgAvatar = view.findViewById(R.id.imgAvatar);
@@ -185,6 +214,9 @@ public class CatProfileActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 弹出编辑猫咪档案对话框。
+     */
     private void showEditDialog(CatProfile profile) {
         android.view.View view = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_cat_profile, null);
         android.widget.ImageView imgAvatar = view.findViewById(R.id.imgAvatar);
@@ -252,6 +284,9 @@ public class CatProfileActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 弹出删除确认对话框并执行删除。
+     */
     private void showDeleteDialog(CatProfile profile) {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("删除")
@@ -266,6 +301,9 @@ public class CatProfileActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * 长按条目后的操作入口：编辑 / 删除。
+     */
     private void showActionsDialog(CatProfile profile) {
         String[] items = new String[]{"编辑", "删除"};
         new MaterialAlertDialogBuilder(this)
@@ -282,6 +320,9 @@ public class CatProfileActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * 安全读取输入框文本，避免空指针。
+     */
     private static String safeText(TextInputEditText editText) {
         if (editText.getText() == null) {
             return "";
@@ -289,6 +330,9 @@ public class CatProfileActivity extends AppCompatActivity {
         return editText.getText().toString().trim();
     }
 
+    /**
+     * 持久化读取权限，确保下次启动仍可访问图片 Uri。
+     */
     private void persistReadPermission(Uri uri) {
         try {
             getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -296,6 +340,9 @@ public class CatProfileActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 构造本地默认猫咪档案清单。
+     */
     private List<CatProfile> buildLocalCatProfiles() {
         List<CatProfile> list = new ArrayList<>();
 

@@ -19,6 +19,7 @@ import java.util.List;
  */
 public class CatProfileAdapter extends RecyclerView.Adapter<CatProfileAdapter.CatViewHolder> {
 
+    // 列表数据
     private List<CatProfile> data;
 
     /**
@@ -32,13 +33,23 @@ public class CatProfileAdapter extends RecyclerView.Adapter<CatProfileAdapter.Ca
         void onItemLongPressed(CatProfile profile);
     }
 
+    // 交互回调
     private final Listener listener;
 
+    /**
+     * 构造适配器。
+     *
+     * @param data     初始数据
+     * @param listener 交互回调
+     */
     public CatProfileAdapter(List<CatProfile> data, Listener listener) {
         this.data = data;
         this.listener = listener;
     }
 
+    /**
+     * 替换列表数据并刷新。
+     */
     public void submitList(List<CatProfile> newData) {
         this.data = newData;
         notifyDataSetChanged();
@@ -89,12 +100,20 @@ public class CatProfileAdapter extends RecyclerView.Adapter<CatProfileAdapter.Ca
         return data == null ? 0 : data.size();
     }
 
+    /**
+     * 单条 item 的 ViewHolder，负责视图缓存与数据绑定。
+     */
     static class CatViewHolder extends RecyclerView.ViewHolder {
 
+        // 头像
         ImageView imgCatAvatar;
+        // 名称
         TextView tvCatName;
+        // 品种/性格
         TextView tvCatBreed;
+        // 年龄
         TextView tvCatAge;
+        // 简介
         TextView tvCatIntro;
 
         CatViewHolder(@NonNull View itemView) {
@@ -106,6 +125,9 @@ public class CatProfileAdapter extends RecyclerView.Adapter<CatProfileAdapter.Ca
             tvCatIntro = itemView.findViewById(R.id.tvCatIntro);
         }
 
+        /**
+         * 绑定普通猫咪档案数据。
+         */
         void bind(CatProfile profile) {
             imgCatAvatar.setImageURI(null);
             if (profile.getAvatarUri() != null) {
@@ -119,6 +141,9 @@ public class CatProfileAdapter extends RecyclerView.Adapter<CatProfileAdapter.Ca
             tvCatIntro.setText(profile.getIntro());
         }
 
+        /**
+         * 绑定“添加猫咪”入口样式。
+         */
         void bindAsAddEntry() {
             imgCatAvatar.setImageResource(R.drawable.ic_meow_add);
             tvCatName.setText("添加猫咪");

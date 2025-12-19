@@ -14,14 +14,29 @@ import com.justyn.meow.R;
 import com.justyn.meow.data.MeowDbHelper;
 import com.justyn.meow.util.MeowPreferences;
 
+/**
+ * 登录页面：校验本地账号密码并保存登录态。
+ * <p>
+ * 逻辑要点：
+ * - 启动时先检查是否已登录
+ * - 输入校验通过后查询本地数据库
+ * - 登录成功则持久化登录态并跳转主界面
+ * </p>
+ */
 public class LoginActivity extends AppCompatActivity {
 
+    // 数据库帮助类，用于校验账号密码
     private MeowDbHelper dbHelper;
+    // 用户名输入框
     private TextInputEditText etUsername;
+    // 密码输入框
     private TextInputEditText etPassword;
 
-    // 先看本地登录态，已登录就直接进主界面
-    // 否则初始化布局和控件
+    /**
+     * 初始化登录页：
+     * - 已登录则直接跳转主界面并结束当前页
+     * - 未登录则初始化布局与事件
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,8 +68,13 @@ public class LoginActivity extends AppCompatActivity {
         );
     }
 
-    // 从输入框取用户名/密码，先做判空，再查库校验
-    // 成功就保存登录态并跳主界面，失败只提示错误
+    /**
+     * 执行登录流程：
+     * - 从输入框读取用户名/密码
+     * - 判空后查询数据库校验
+     * - 成功则保存登录态并进入主界面
+     * - 失败则提示错误
+     */
     private void doLogin() {
         // 用户名去掉前后空格，密码保留原样避免改变用户输入
         String username = etUsername.getText() == null ? "" : etUsername.getText().toString().trim();

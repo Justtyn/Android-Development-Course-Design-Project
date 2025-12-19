@@ -24,10 +24,22 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * 主入口页面：展示功能卡片、当前用户信息与打卡状态。
+ * <p>
+ * 这里负责：
+ * 1) 读取登录态并在未登录时跳转到登录页
+ * 2) 展示用户昵称/用户名
+ * 3) 处理功能入口跳转
+ * 4) 记录并显示“撸猫打卡”连续天数
+ * </p>
+ */
 public class MainActivity extends AppCompatActivity {
 
+    // 首页顶部“当前用户”文案
     private TextView tvCurrentUserName;
 
+    // 打卡卡片副标题（展示连续天数）
     private TextView tvCheckInSub;
 
     // 打卡相关常量
@@ -35,8 +47,18 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_LAST_CHECKIN_DATE = "last_checkin_date";
     private static final String KEY_STREAK = "checkin_streak";
 
+    // 保存打卡状态的 SharedPreferences
     private SharedPreferences checkInPrefs;
 
+    /**
+     * 初始化主界面：校验登录态、绑定控件与注册点击事件。
+     * <p>
+     * 主要流程：
+     * - 未登录则直接跳转登录页
+     * - 绑定 UI 控件与功能卡片点击
+     * - 恢复打卡连续天数并展示
+     * </p>
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
         MaterialCardView cardCatWiki = findViewById(R.id.cardCatWiki);
         MaterialCardView cardMeowPic = findViewById(R.id.cardMeowPic);
 
-        // 打卡控件
         // 打卡相关控件
         MaterialCardView cardCheckIn = findViewById(R.id.cardCheckIn);
         tvCheckInSub = findViewById(R.id.tvCheckInSub);
@@ -100,6 +121,9 @@ public class MainActivity extends AppCompatActivity {
         cardCheckIn.setOnClickListener(v -> handleCheckIn());
     }
 
+    /**
+     * 跳转到登录页并清空返回栈，避免返回到主界面。
+     */
     private void goLoginAndFinish() {
         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
         // 清空栈
@@ -109,6 +133,10 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
+    /**
+     * 绑定“当前用户”显示文本。
+     * 优先显示昵称，其次显示用户名，最后使用兜底文案。
+     */
     private void bindCurrentUser() {
         // 优先显示昵称，没有昵称就显示账号
         String nickname = MeowPreferences.getNickname(this);
@@ -125,7 +153,12 @@ public class MainActivity extends AppCompatActivity {
         tvCurrentUserName.setText(displayName);
     }
 
-    //   打卡逻辑
+    /**
+     * 打卡逻辑：
+     * - 若今天已打卡则直接提示
+     * - 若是首次或断档则从 1 重新开始
+     * - 若昨天打卡过则连续天数 +1
+     */
     private void handleCheckIn() {
         String today = getTodayString(); // 例如 2025-12-08
         String lastDate = checkInPrefs.getString(KEY_LAST_CHECKIN_DATE, null);
@@ -159,11 +192,17 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "撸猫打卡成功！", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * 更新打卡卡片副标题显示。
+     */
     private void updateCheckInText(int streak) {
         String text = "已连续打卡 " + streak + " 天";
         tvCheckInSub.setText(text);
     }
 
+    /**
+     * 获取今天的日期字符串（yyyy-MM-dd）。
+     */
     private String getTodayString() {
         // 格式：yyyy-MM-dd，比如 2025-12-08
         SimpleDateFormat sdf =
@@ -171,6 +210,13 @@ public class MainActivity extends AppCompatActivity {
         return sdf.format(new Date());
     }
 
+    /**
+     * 判断 lastDate 是否为 today 的前一天。
+     *
+     * @param lastDateStr 上次打卡日期字符串
+     * @param todayStr    今天日期字符串
+     * @return true 表示连续，false 表示不连续或解析失败
+     */
     private boolean isYesterday(String lastDateStr, String todayStr) {
         SimpleDateFormat sdf =
                 new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());

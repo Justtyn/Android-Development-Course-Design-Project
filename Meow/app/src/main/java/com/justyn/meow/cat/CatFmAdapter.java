@@ -15,6 +15,10 @@ import com.justyn.meow.R;
 
 import java.util.List;
 
+/**
+ * 喵音 FM 列表适配器：
+ * 负责渲染音频条目与“添加喵音”入口，并把交互回调给 Activity。
+ */
 public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder> {
 
     /**
@@ -35,13 +39,23 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
 
     // 当前正在播放的 position（默认 NO_POSITION = -1，表示没有正在播放）
     private int playingPosition = RecyclerView.NO_POSITION;
+    // 当前播放状态（决定按钮显示“暂停/继续”）
     private boolean isPlaying;
 
+    /**
+     * 构造适配器。
+     *
+     * @param data     列表数据
+     * @param listener 交互回调
+     */
     public CatFmAdapter(List<FmTrack> data, Listener listener) {
         this.data = data;
         this.listener = listener;
     }
 
+    /**
+     * 替换数据并刷新列表。
+     */
     @SuppressLint("NotifyDataSetChanged")
     public void submitList(List<FmTrack> newData) {
         this.data = newData;
@@ -181,6 +195,9 @@ public class CatFmAdapter extends RecyclerView.Adapter<CatFmAdapter.FmViewHolder
             }
         }
 
+        /**
+         * 绑定“添加喵音”入口样式。
+         */
         void bindAsAddEntry() {
             tvTrackTitle.setText("添加喵音");
             tvTrackSubtitle.setText("长按可选择删除、编辑选项～");

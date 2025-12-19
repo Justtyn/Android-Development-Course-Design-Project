@@ -28,24 +28,39 @@ import com.justyn.meow.util.MeowPreferences;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 喵音 FM 页面：管理音频列表与播放控制。
+ * <p>
+ * 主要职责：
+ * - 列表增删改与搜索过滤
+ * - MediaPlayer 播放/暂停、快进/快退
+ * - 进度条与时间展示的同步刷新
+ * </p>
+ */
 public class CatFmActivity extends AppCompatActivity {
 
-    // 音频列表的适配器
+    // 音频列表的适配器（负责渲染每一条音频卡片）
     private CatFmAdapter adapter;
 
+    // 数据库操作类：用于读写音频列表
     private MeowDbHelper dbHelper;
+    // 搜索输入框：实时过滤列表
     private TextInputEditText etSearch;
 
+    // 临时回调：用于接收系统文件选择器返回的 Uri
     private interface UriReceiver {
         void onPicked(Uri uri);
     }
 
+    // 系统文件选择器：选择音频文件
     private ActivityResultLauncher<String[]> audioPickerLauncher;
+    // 保存当前选择动作的回调（避免多处共用时丢失）
     private UriReceiver pendingAudioReceiver;
 
-    // 真正负责播放音频的 MediaPlayer
+    // 真正负责播放音频的 MediaPlayer（一次只播放一条）
     private MediaPlayer mediaPlayer;
 
+    // 底部播放控制区控件
     private SeekBar seekBar;
     private TextView tvCurrentTime;
     private TextView tvTotalTime;
@@ -53,12 +68,16 @@ public class CatFmActivity extends AppCompatActivity {
     private MaterialButton btnForward;
     private MaterialButton btnRewind;
 
+    // 定时更新进度的 Handler（主线程）
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
 
+    // 用户是否正在拖动进度条（用于暂停自动刷新）
     private boolean isUserSeeking = false;
 
+    // 快进/快退步长：10 秒
     private static final int SKIP_STEP_MS = 10_000;
 
+    // 定时刷新进度条与当前时间
     private final Runnable progressRunnable = new Runnable() {
         @Override
         public void run() {
@@ -75,8 +94,12 @@ public class CatFmActivity extends AppCompatActivity {
 
     // 当前正在播放的列表下标（-1 / NO_POSITION 表示没有在播）
     private int currentPlayingPosition = RecyclerView.NO_POSITION;
+    // 当前正在播放的音频 ID（用于删除时判断）
     private long currentPlayingTrackId = -1;
 
+    /**
+     * 初始化列表、播放器控件与搜索。
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,9 +107,11 @@ public class CatFmActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cat_fm);
 
+        // 初始化 DB 与搜索框
         dbHelper = new MeowDbHelper(this);
         etSearch = findViewById(R.id.etSearch);
 
+        // 注册音频文件选择器，获取 Uri 后持久化读权限
         audioPickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenDocument(),
                 uri -> {
@@ -100,6 +125,7 @@ public class CatFmActivity extends AppCompatActivity {
                 }
         );
 
+        // 绑定播放器控件
         seekBar = findViewById(R.id.seekBar);
         tvCurrentTime = findViewById(R.id.tvCurrentTime);
         tvTotalTime = findViewById(R.id.tvTotalTime);
@@ -107,14 +133,17 @@ public class CatFmActivity extends AppCompatActivity {
         btnForward = findViewById(R.id.btnForward);
         btnRewind = findViewById(R.id.btnRewind);
 
+        // 初始显示 00:00
         resetTimeUi();
 
         // 1. 找到 RecyclerView，并设置垂直线性布局
         RecyclerView rvTracks = findViewById(R.id.rvTracks);
         rvTracks.setLayoutManager(new LinearLayoutManager(this));
 
+        // 首次进入时写入默认音频
         seedDefaultTracksIfNeeded();
 
+        // 构造适配器，并绑定各项点击事件
         adapter = new CatFmAdapter(new ArrayList<>(), new CatFmAdapter.Listener() {
             @Override
             public void onAddClicked() {
@@ -133,8 +162,10 @@ public class CatFmActivity extends AppCompatActivity {
         });
         rvTracks.setAdapter(adapter);
 
+        // 首次加载列表
         reloadList(null);
 
+        // 搜索框实时过滤列表
         etSearch.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -150,10 +181,14 @@ public class CatFmActivity extends AppCompatActivity {
             }
         });
 
+        // 初始化播放控制逻辑，默认禁用
         setupPlaybackControls();
         setPlaybackControlsEnabled(false);
     }
 
+    /**
+     * 若数据库为空则写入本地默认音频，避免每次启动重复写入。
+     */
     private void seedDefaultTracksIfNeeded() {
         if (MeowPreferences.isFmSeeded(this)) {
             return;
@@ -169,6 +204,11 @@ public class CatFmActivity extends AppCompatActivity {
         MeowPreferences.markFmSeeded(this);
     }
 
+    /**
+     * 根据关键词刷新列表，并重置当前播放状态。
+     *
+     * @param titleQuery 标题关键字，空表示不过滤
+     */
     private void reloadList(String titleQuery) {
         releasePlayer();
         resetPlaybackUi();
@@ -211,10 +251,13 @@ public class CatFmActivity extends AppCompatActivity {
      * 初始化底部播放控制区域
      */
     private void setupPlaybackControls() {
+        // 播放/暂停
         btnPlayPauseControl.setOnClickListener(v -> togglePlayPause());
+        // 快进与快退
         btnForward.setOnClickListener(v -> seekBy(SKIP_STEP_MS));
         btnRewind.setOnClickListener(v -> seekBy(-SKIP_STEP_MS));
 
+        // 进度条拖动监听：只在用户手动拖动时更新显示
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -310,16 +353,19 @@ public class CatFmActivity extends AppCompatActivity {
      * 底部播放/暂停按钮
      */
     private void togglePlayPause() {
+        // 未选择任何音频，直接提示
         if (mediaPlayer == null) {
             Toast.makeText(this, "先从列表里选一条喵音播放吧～", Toast.LENGTH_SHORT).show();
             return;
         }
         if (mediaPlayer.isPlaying()) {
+            // 暂停播放并更新按钮状态
             mediaPlayer.pause();
             adapter.updatePlayingState(currentPlayingPosition, false);
             btnPlayPauseControl.setText("▶ 继续");
             stopProgressUpdates();
         } else {
+            // 继续播放并恢复进度刷新
             mediaPlayer.start();
             adapter.updatePlayingState(currentPlayingPosition, true);
             btnPlayPauseControl.setText("⏸ 暂停");
@@ -334,6 +380,7 @@ public class CatFmActivity extends AppCompatActivity {
         if (mediaPlayer == null) {
             return;
         }
+        // 计算目标时间，限制在 0~duration 范围内
         int target = mediaPlayer.getCurrentPosition() + deltaMs;
         target = Math.max(0, Math.min(target, mediaPlayer.getDuration()));
         mediaPlayer.seekTo(target);
@@ -348,31 +395,47 @@ public class CatFmActivity extends AppCompatActivity {
         if (mediaPlayer == null) {
             return;
         }
+        // 以音频总时长作为最大进度
         seekBar.setMax(mediaPlayer.getDuration());
         seekBar.setProgress(0);
         tvTotalTime.setText(formatTime(mediaPlayer.getDuration()));
         tvCurrentTime.setText(formatTime(0));
     }
 
+    /**
+     * 开始定时刷新播放进度。
+     */
     private void startProgressUpdates() {
         stopProgressUpdates();
         progressHandler.post(progressRunnable);
     }
 
+    /**
+     * 停止定时刷新，避免泄漏与重复回调。
+     */
     private void stopProgressUpdates() {
         progressHandler.removeCallbacks(progressRunnable);
     }
 
+    /**
+     * 重置进度条。
+     */
     private void resetSeekBar() {
         seekBar.setProgress(0);
         seekBar.setMax(0);
     }
 
+    /**
+     * 重置时间显示。
+     */
     private void resetTimeUi() {
         tvCurrentTime.setText(formatTime(0));
         tvTotalTime.setText(formatTime(0));
     }
 
+    /**
+     * 统一控制底部播放控件可用状态。
+     */
     private void setPlaybackControlsEnabled(boolean enabled) {
         seekBar.setEnabled(enabled);
         btnPlayPauseControl.setEnabled(enabled);
@@ -380,6 +443,9 @@ public class CatFmActivity extends AppCompatActivity {
         btnRewind.setEnabled(enabled);
     }
 
+    /**
+     * 重置播放状态与按钮 UI。
+     */
     private void resetPlaybackUi() {
         currentPlayingPosition = RecyclerView.NO_POSITION;
         currentPlayingTrackId = -1;
@@ -396,6 +462,7 @@ public class CatFmActivity extends AppCompatActivity {
      * 安全释放 MediaPlayer 资源，防止内存泄漏 / 占用系统资源
      */
     private void releasePlayer() {
+        // 先停掉进度刷新，避免释放后仍回调
         stopProgressUpdates();
         if (mediaPlayer != null) {
             try {
@@ -420,7 +487,11 @@ public class CatFmActivity extends AppCompatActivity {
         resetPlaybackUi();
     }
 
+    /**
+     * 弹出新增音频对话框，支持选择本地音频文件并写入数据库。
+     */
     private void showAddDialog() {
+        // 弹出“新增喵音”对话框
         android.view.View view = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_fm_track, null);
         TextInputEditText etTitle = view.findViewById(R.id.etTitle);
         TextInputEditText etSubtitle = view.findViewById(R.id.etSubtitle);
@@ -430,6 +501,7 @@ public class CatFmActivity extends AppCompatActivity {
         final Uri[] selectedAudioUri = new Uri[]{null};
 
         btnPickAudio.setOnClickListener(v -> {
+            // 选择音频后更新提示文案
             pendingAudioReceiver = uri -> {
                 selectedAudioUri[0] = uri;
                 tvAudioSelected.setText("已选择：" + getDisplayName(uri));
@@ -449,6 +521,7 @@ public class CatFmActivity extends AppCompatActivity {
         dialog.show();
 
         dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            // 校验标题与音频文件
             String title = safeText(etTitle);
             if (title.isEmpty()) {
                 Toast.makeText(this, "标题不能为空喵～", Toast.LENGTH_SHORT).show();
@@ -459,13 +532,18 @@ public class CatFmActivity extends AppCompatActivity {
                 return;
             }
             String subtitle = safeText(etSubtitle);
+            // 写入数据库并刷新列表
             dbHelper.insertFmTrack(title, subtitle, null, selectedAudioUri[0].toString());
             reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
             dialog.dismiss();
         });
     }
 
+    /**
+     * 弹出编辑音频对话框（仅允许修改标题/副标题）。
+     */
     private void showEditDialog(FmTrack track) {
+        // 弹出“编辑喵音”对话框（仅允许修改标题/副标题）
         android.view.View view = android.view.LayoutInflater.from(this).inflate(R.layout.dialog_fm_track, null);
         TextInputEditText etTitle = view.findViewById(R.id.etTitle);
         TextInputEditText etSubtitle = view.findViewById(R.id.etSubtitle);
@@ -494,6 +572,7 @@ public class CatFmActivity extends AppCompatActivity {
         dialog.show();
 
         dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            // 校验标题并更新数据库
             String title = safeText(etTitle);
             if (title.isEmpty()) {
                 Toast.makeText(this, "标题不能为空喵～", Toast.LENGTH_SHORT).show();
@@ -506,13 +585,18 @@ public class CatFmActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 弹出删除确认对话框并执行删除。
+     */
     private void showDeleteDialog(FmTrack track) {
+        // 删除确认弹窗
         new MaterialAlertDialogBuilder(this)
                 .setTitle("删除")
                 .setMessage("确定删除「" + track.getTitle() + "」吗？")
                 .setNegativeButton("取消", (d, which) -> {
                 })
                 .setPositiveButton("删除", (d, which) -> {
+                    // 删除前如果正在播放同一条，先停止
                     if (currentPlayingTrackId == track.getId()) {
                         releasePlayer();
                         resetPlaybackUi();
@@ -524,7 +608,11 @@ public class CatFmActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * 长按条目后的操作入口：编辑 / 删除。
+     */
     private void showActionsDialog(FmTrack track) {
+        // 长按后操作弹窗：编辑 / 删除
         String[] items = new String[]{"编辑", "删除"};
         new MaterialAlertDialogBuilder(this)
                 .setTitle(track.getTitle())
@@ -540,6 +628,9 @@ public class CatFmActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * 安全读取输入框文本，避免空指针。
+     */
     private static String safeText(TextInputEditText editText) {
         if (editText.getText() == null) {
             return "";
@@ -547,6 +638,9 @@ public class CatFmActivity extends AppCompatActivity {
         return editText.getText().toString().trim();
     }
 
+    /**
+     * 持久化读取权限，避免下次启动无法访问。
+     */
     private void persistReadPermission(Uri uri) {
         try {
             getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -554,6 +648,9 @@ public class CatFmActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 获取音频文件展示名（失败则回退到 Uri 字符串）。
+     */
     private String getDisplayName(Uri uri) {
         Cursor cursor = null;
         try {
@@ -573,6 +670,9 @@ public class CatFmActivity extends AppCompatActivity {
         return uri.toString();
     }
 
+    /**
+     * 把毫秒格式化成 mm:ss。
+     */
     private static String formatTime(int ms) {
         if (ms < 0) {
             ms = 0;
