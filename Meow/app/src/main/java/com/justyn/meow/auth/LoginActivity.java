@@ -60,20 +60,19 @@ public class LoginActivity extends AppCompatActivity {
 
         boolean ok = dbHelper.checkLogin(username, password);
         if (ok) {
-            // 查出昵称
+            // 1. 查出昵称
             String nickname = dbHelper.getNicknameByUsername(username);
             if (nickname == null) {
                 nickname = "";
             }
-
             // 2. 保存到 SharedPreferences
             MeowPreferences.saveLogin(this, username, nickname);
-
+            // 3. 弹窗提示登录成功
             Toast.makeText(this, "登录成功，喵~！", Toast.LENGTH_SHORT).show();
-
-            // 3. 跳转到主界面 MainActivity
+            // 4. 跳转到主界面 MainActivity
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
+            // 5. 关闭登录页面
             finish();
         } else {
             Toast.makeText(this, "喵～，账号或密码错误了喔", Toast.LENGTH_SHORT).show();

@@ -258,7 +258,7 @@ public class CatFmActivity extends AppCompatActivity {
         if (track == null || track.isAddEntry()) {
             return;
         }
-        // 情况一：点击的是当前正在播放的那一条 → 停止播放
+        // 情况一：点击的是当前正在播放的 → 停止播放
         if (mediaPlayer != null && currentPlayingPosition == position) {
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.stop();
@@ -268,8 +268,7 @@ public class CatFmActivity extends AppCompatActivity {
             return;
         }
 
-        // 情况二：点击的是其他条目
-        // 如果之前已经有一个 MediaPlayer 存在（说明之前有一条在播），先释放掉
+        // 情况二：点击的是其他条目 如果之前已经有 MediaPlayer 存在说明在播，先释放
         if (mediaPlayer != null) {
             releasePlayer();
         }
@@ -416,7 +415,7 @@ public class CatFmActivity extends AppCompatActivity {
         // 页面不可见（切后台 / 退出页面）时：
         // 1. 停止播放
         // 2. 重置当前播放标记
-        // 3. 通知列表恢复按钮文案
+        // 3. 列表恢复按钮文案
         releasePlayer();
         resetPlaybackUi();
     }

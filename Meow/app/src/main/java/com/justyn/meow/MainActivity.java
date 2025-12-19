@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         // 清空栈
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        // 保险，finish 当前页面
+        // 结束当前页面
         finish();
     }
 
