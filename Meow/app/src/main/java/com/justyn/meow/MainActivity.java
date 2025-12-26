@@ -1,11 +1,9 @@
 package com.justyn.meow;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,12 +15,9 @@ import com.justyn.meow.cat.CatFmActivity;
 import com.justyn.meow.cat.CatPicActivity;
 import com.justyn.meow.cat.CatProfileActivity;
 import com.justyn.meow.cat.CatWikiActivity;
+import com.justyn.meow.checkin.CheckInCalendarActivity;
+import com.justyn.meow.checkin.CheckInStore;
 import com.justyn.meow.util.MeowPreferences;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 /**
  * 主入口页面：展示功能卡片、当前用户信息与打卡状态。
@@ -41,17 +36,6 @@ public class MainActivity extends AppCompatActivity {
 
     // 打卡卡片副标题（展示连续天数）
     private TextView tvCheckInSub;
-
-    // 打卡相关常量
-    private static final String PREFS_NAME = "meow_checkin_prefs";
-    private static final String KEY_LAST_CHECKIN_DATE = "last_checkin_date";
-    private static final String KEY_STREAK = "checkin_streak";
-
-    // 保存打卡状态的 SharedPreferences
-    private SharedPreferences checkInPrefs;
-    private String currentUsername;
-    private String keyLastCheckInDate;
-    private String keyStreak;
 
     /**
      * 初始化主界面：校验登录态、绑定控件与注册点击事件。
@@ -87,14 +71,11 @@ public class MainActivity extends AppCompatActivity {
         MaterialCardView cardCheckIn = findViewById(R.id.cardCheckIn);
         tvCheckInSub = findViewById(R.id.tvCheckInSub);
 
-        // 打卡持久化
-        initCheckInPrefs();
-
         // 绑定当前用户
         bindCurrentUser();
 
         // 初始化打卡显示
-        int streak = checkInPrefs.getInt(keyStreak, 0);
+        int streak = CheckInStore.getStreak(this);
         updateCheckInText(streak);
 
         // 退出登录
@@ -121,7 +102,9 @@ public class MainActivity extends AppCompatActivity {
         );
 
         // 撸猫打卡卡片点击
-        cardCheckIn.setOnClickListener(v -> handleCheckIn());
+        cardCheckIn.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, CheckInCalendarActivity.class))
+        );
     }
 
     /**
@@ -157,45 +140,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 打卡逻辑：
-     * - 若今天已打卡则直接提示
-     * - 若是首次或断档则从 1 重新开始
-     * - 若昨天打卡过则连续天数 +1
-     */
-    private void handleCheckIn() {
-        String today = getTodayString(); // 例如 2025-12-08
-        String lastDate = checkInPrefs.getString(keyLastCheckInDate, null);
-        int streak = checkInPrefs.getInt(keyStreak, 0);
-
-        // 如果今天已经打卡了
-        if (today.equals(lastDate)) {
-            Toast.makeText(this, "今天已经撸猫打卡过啦！", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // 第一次打卡 或者 lastDate 无效
-        if (lastDate == null) {
-            streak = 1;
-        } else if (isYesterday(lastDate, today)) {
-            // 昨天打过卡，今天接着打 ⇒ 连续 +1
-            streak = streak + 1;
-        } else {
-            // 中间断了，从 1 重新开始
-            streak = 1;
-        }
-
-        // 保存新数据
-        checkInPrefs.edit()
-                .putString(keyLastCheckInDate, today)
-                .putInt(keyStreak, streak)
-                .apply();
-
-        // 更新 UI
-        updateCheckInText(streak);
-        Toast.makeText(this, "撸猫打卡成功！", Toast.LENGTH_SHORT).show();
-    }
-
-    /**
      * 更新打卡卡片副标题显示。
      */
     private void updateCheckInText(int streak) {
@@ -203,69 +147,9 @@ public class MainActivity extends AppCompatActivity {
         tvCheckInSub.setText(text);
     }
 
-    private void initCheckInPrefs() {
-        currentUsername = MeowPreferences.getUsername(this);
-        checkInPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        keyLastCheckInDate = buildCheckInKey(KEY_LAST_CHECKIN_DATE);
-        keyStreak = buildCheckInKey(KEY_STREAK);
-        migrateLegacyCheckInIfNeeded();
-    }
-
-    private String buildCheckInKey(String baseKey) {
-        if (currentUsername == null || currentUsername.trim().isEmpty()) {
-            return baseKey;
-        }
-        return baseKey + "_" + currentUsername;
-    }
-
-    private void migrateLegacyCheckInIfNeeded() {
-        if (currentUsername == null || currentUsername.trim().isEmpty()) {
-            return;
-        }
-        if (checkInPrefs.contains(keyStreak) || checkInPrefs.contains(keyLastCheckInDate)) {
-            return;
-        }
-        SharedPreferences.Editor editor = checkInPrefs.edit();
-        if (checkInPrefs.contains(KEY_STREAK)) {
-            editor.putInt(keyStreak, checkInPrefs.getInt(KEY_STREAK, 0));
-        }
-        if (checkInPrefs.contains(KEY_LAST_CHECKIN_DATE)) {
-            editor.putString(keyLastCheckInDate, checkInPrefs.getString(KEY_LAST_CHECKIN_DATE, null));
-        }
-        editor.apply();
-    }
-
-    /**
-     * 获取今天的日期字符串（yyyy-MM-dd）。
-     */
-    private String getTodayString() {
-        // 格式：yyyy-MM-dd，比如 2025-12-08
-        SimpleDateFormat sdf =
-                new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        return sdf.format(new Date());
-    }
-
-    /**
-     * 判断 lastDate 是否为 today 的前一天。
-     *
-     * @param lastDateStr 上次打卡日期字符串
-     * @param todayStr    今天日期字符串
-     * @return true 表示连续，false 表示不连续或解析失败
-     */
-    private boolean isYesterday(String lastDateStr, String todayStr) {
-        SimpleDateFormat sdf =
-                new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        try {
-            Date last = sdf.parse(lastDateStr);
-            Date today = sdf.parse(todayStr);
-            if (last == null || today == null) return false;
-
-            long diffMs = today.getTime() - last.getTime();
-            long days = diffMs / (1000 * 60 * 60 * 24);
-            return days == 1;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return false;
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateCheckInText(CheckInStore.getStreak(this));
     }
 }

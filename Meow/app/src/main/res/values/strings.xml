@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">Meow</string>
+    <string name="checkin_calendar_title">打卡日历</string>
+    <string name="checkin_selected_date_label">选中日期</string>
+    <string name="checkin_status_done">已打卡</string>
+    <string name="checkin_status_missed">未打卡</string>
+    <string name="checkin_month_summary">本月已打卡 %1$d 天，未打卡 %2$d 天</string>
+    <string name="checkin_month_summary_placeholder">本月已打卡 0 天，未打卡 0 天</string>
+    <string name="checkin_month_title">%1$d年%2$d月</string>
+    <string name="checkin_today_button">今日打卡</string>
+    <string name="checkin_today_done">今日已打卡</string>
+    <string name="checkin_toast_already">今天已经撸猫打卡过啦！</string>
+    <string name="checkin_toast_done">撸猫打卡成功！</string>
+    <string name="calendar_week_sun">日</string>
+    <string name="calendar_week_mon">一</string>
+    <string name="calendar_week_tue">二</string>
+    <string name="calendar_week_wed">三</string>
+    <string name="calendar_week_thu">四</string>
+    <string name="calendar_week_fri">五</string>
+    <string name="calendar_week_sat">六</string>
 </resources>

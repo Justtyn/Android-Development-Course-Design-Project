@@ -25,6 +25,9 @@
             android:name=".cat.CatProfileActivity"
             android:exported="false" />
         <activity
+            android:name=".checkin.CheckInCalendarActivity"
+            android:exported="false" />
+        <activity
             android:name=".auth.RegisterActivity"
             android:exported="false" />
         <activity

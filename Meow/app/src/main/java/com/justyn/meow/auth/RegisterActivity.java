@@ -6,6 +6,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.justyn.meow.R;
@@ -42,6 +43,9 @@ public class RegisterActivity extends AppCompatActivity {
         // 处理沉浸式边距
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_register);
+
+        MaterialToolbar toolbar = findViewById(R.id.topAppBar);
+        toolbar.setNavigationOnClickListener(v -> finish());
 
         // 注册需要查重和写库，先把 DB helper 准备好
         dbHelper = new MeowDbHelper(this);

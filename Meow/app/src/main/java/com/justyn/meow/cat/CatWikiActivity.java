@@ -7,6 +7,7 @@ import android.webkit.WebView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import com.justyn.meow.R;
 
 /**
@@ -26,6 +27,9 @@ public class CatWikiActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cat_wiki);
+
+        MaterialToolbar toolbar = findViewById(R.id.topAppBar4);
+        toolbar.setNavigationOnClickListener(v -> finish());
 
         WebView webView = findViewById(R.id.webViewMeow);
         // 允许网页使用 JavaScript

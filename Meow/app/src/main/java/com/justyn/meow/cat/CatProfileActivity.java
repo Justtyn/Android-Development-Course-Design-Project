@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.justyn.meow.R;
 import com.justyn.meow.data.MeowDbHelper;
@@ -58,6 +59,9 @@ public class CatProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cat_profile);
+
+        MaterialToolbar toolbar = findViewById(R.id.topAppBar4);
+        toolbar.setNavigationOnClickListener(v -> finish());
 
         dbHelper = new MeowDbHelper(this);
         currentUsername = MeowPreferences.getUsername(this);

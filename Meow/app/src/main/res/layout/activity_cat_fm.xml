@@ -28,6 +28,8 @@
         android:layout_height="80dp"
         android:background="@color/meow_primary"
         android:paddingTop="25dp"
+        app:navigationIcon="@drawable/ic_meow_back"
+        app:navigationIconTint="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"

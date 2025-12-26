@@ -50,4 +50,6 @@ dependencies {
     androidTestImplementation libs.espresso.core
     // 列表组件
     implementation libs.recyclerview
+    // 日历组件（Kizitonwose）
+    implementation libs.kizitonwose.calendar
 }

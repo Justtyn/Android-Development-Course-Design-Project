@@ -20,6 +20,21 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="ContentDescription" />
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:background="@color/meow_primary"
+        android:paddingTop="25dp"
+        app:navigationIcon="@drawable/ic_meow_back"
+        app:navigationIconTint="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="注册"
+        app:titleCentered="true"
+        app:titleTextColor="@android:color/white" />
+
     <!-- 中间一个卡片，放注册表单（半透明） -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardRegister"
@@ -32,7 +47,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/topAppBar">
 
         <LinearLayout
             android:layout_width="match_parent"

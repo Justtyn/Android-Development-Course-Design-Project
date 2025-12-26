@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
@@ -107,6 +108,9 @@ public class CatFmActivity extends AppCompatActivity {
         // 开启 EdgeToEdge，让内容可以延伸到状态栏 / 导航栏区域
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_cat_fm);
+
+        MaterialToolbar toolbar = findViewById(R.id.topAppBar);
+        toolbar.setNavigationOnClickListener(v -> finish());
 
         // 初始化 DB 与搜索框
         dbHelper = new MeowDbHelper(this);
