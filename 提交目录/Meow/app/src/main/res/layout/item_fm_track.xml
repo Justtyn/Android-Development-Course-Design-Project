@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardTrack"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/meow_surface"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/meow_card_soft_pink"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <!-- 左边：音频信息 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- 音频标题 -->
+            <TextView
+                android:id="@+id/tvTrackTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="猫咪白噪音 · 轻柔呼噜"
+                android:textColor="@color/meow_on_surface"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- 简短描述 -->
+            <TextView
+                android:id="@+id/tvTrackSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="适合睡前安抚主子的小耳朵"
+                android:textColor="@color/meow_on_surface_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- 右边：播放 / 暂停按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPlayPause"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="16dp"
+            android:text="▶ 播放"
+            android:textAllCaps="false"
+            android:textColor="@color/meow_primary"
+            android:textSize="13sp"
+            app:cornerRadius="999dp"
+            app:strokeColor="@color/meow_primary"
+            app:strokeWidth="1dp" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
