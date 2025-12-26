@@ -23,7 +23,7 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/topAppBar"
         android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="80dp"
         android:background="@color/meow_primary"
         android:paddingTop="24dp"
         app:navigationIcon="@drawable/ic_meow_back"
