@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".cat.CatFmActivity">
 
+    <!-- 背景图层：铺满全屏，页面背景 -->
     <ImageView
         android:id="@+id/imgBackground"
         android:layout_width="0dp"
@@ -20,26 +21,27 @@
         tools:ignore="ContentDescription" />
 
 
+    <!-- 顶部工具栏：标题区，固定在顶部 -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/topAppBar"
         android:layout_width="0dp"
         android:layout_height="80dp"
         android:background="@color/meow_primary"
         android:paddingTop="25dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:title="喵 FM"
         app:titleCentered="true"
         app:titleTextColor="@android:color/white" />
 
+    <!-- 搜索区域：标题搜索输入框 -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilSearch"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginHorizontal="16dp"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="16dp"
         android:hint="搜索标题"
         app:boxBackgroundColor="@color/meow_surface"
         app:boxBackgroundMode="filled"
@@ -52,6 +54,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/topAppBar">
 
+        <!-- 输入控件：单行文本输入 -->
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSearch"
             android:layout_width="match_parent"
@@ -60,23 +63,20 @@
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- 列表区域：位于搜索框与底部控制区之间 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTracks"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingStart="16dp"
+        android:paddingHorizontal="16dp"
         android:paddingTop="8dp"
-        android:paddingEnd="16dp"
         android:paddingBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/playbackControls"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tilSearch"
-        app:layout_constraintVertical_bias="0.0"
         tools:listitem="@layout/item_fm_track" />
 
+    <!-- 底部播放控制区：固定在底部，卡片样式承载控制组件 -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/playbackControls"
         android:layout_width="0dp"
@@ -88,14 +88,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
+        <!-- 垂直排布：进度条 -> 时间信息 -> 控制按钮 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="vertical"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp">
+            android:paddingHorizontal="4dp">
 
+            <!-- 播放进度：支持拖动与进度显示 -->
             <SeekBar
                 android:id="@+id/seekBar"
                 android:layout_width="match_parent"
@@ -106,6 +107,7 @@
                 android:progressTint="@color/meow_primary"
                 android:thumbTint="@color/meow_primary" />
 
+            <!-- 时间信息：当前时间与总时长 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -114,6 +116,7 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <!-- 当前播放时间 -->
                 <TextView
                     android:id="@+id/tvCurrentTime"
                     android:layout_width="0dp"
@@ -123,6 +126,7 @@
                     android:textColor="@color/meow_on_surface_muted"
                     android:textSize="12sp" />
 
+                <!-- 音频总时长 -->
                 <TextView
                     android:id="@+id/tvTotalTime"
                     android:layout_width="wrap_content"
@@ -132,15 +136,17 @@
                     android:textSize="12sp" />
             </LinearLayout>
 
+            <!-- 控制按钮区：倒退/播放/前进 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:paddingBottom="20dp"
-                android:paddingTop="2dp">
+                android:paddingTop="2dp"
+                android:paddingBottom="20dp">
 
+                <!-- 倒退 -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRewind"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -148,15 +154,16 @@
                     android:layout_height="wrap_content"
                     android:text="⏪ 倒退" />
 
+                <!-- 播放/暂停 -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnPlayPauseControl"
                     style="@style/Widget.MaterialComponents.Button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
+                    android:layout_marginHorizontal="12dp"
                     android:text="▶ 播放" />
 
+                <!-- 前进 -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnForward"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"

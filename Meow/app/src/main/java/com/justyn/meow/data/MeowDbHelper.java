@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 import com.justyn.meow.cat.CatProfile;
 import com.justyn.meow.cat.FmTrack;
+import com.justyn.meow.util.MeowPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ public class MeowDbHelper extends SQLiteOpenHelper {
     // 数据库文件名（保存在应用私有目录）
     private static final String DB_NAME = "meow.db";
     // 数据库版本号（升级时用于触发 onUpgrade）
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 3;
 
     // 表名
     public static final String TABLE_USER = "user";
@@ -46,6 +47,7 @@ public class MeowDbHelper extends SQLiteOpenHelper {
     public static final String COL_FM_AUDIO_RES_ID = "audio_res_id";
     public static final String COL_FM_AUDIO_URI = "audio_uri";
     public static final String COL_FM_CREATED_AT = "created_at";
+    public static final String COL_FM_USERNAME = "user_username";
 
     // cat_profile 表字段名
     public static final String COL_CAT_ID = "id";
@@ -56,6 +58,7 @@ public class MeowDbHelper extends SQLiteOpenHelper {
     public static final String COL_CAT_AVATAR_RES_ID = "avatar_res_id";
     public static final String COL_CAT_AVATAR_URI = "avatar_uri";
     public static final String COL_CAT_CREATED_AT = "created_at";
+    public static final String COL_CAT_USERNAME = "user_username";
 
     // 创建 user 表的 SQL（含唯一用户名约束）
     private static final String SQL_CREATE_USER =
@@ -75,7 +78,8 @@ public class MeowDbHelper extends SQLiteOpenHelper {
                     COL_FM_SUBTITLE + " TEXT," +
                     COL_FM_AUDIO_RES_ID + " INTEGER," +
                     COL_FM_AUDIO_URI + " TEXT," +
-                    COL_FM_CREATED_AT + " INTEGER" +
+                    COL_FM_CREATED_AT + " INTEGER," +
+                    COL_FM_USERNAME + " TEXT" +
                     ");";
 
     // 创建 cat_profile 表的 SQL
@@ -88,7 +92,8 @@ public class MeowDbHelper extends SQLiteOpenHelper {
                     COL_CAT_DESCRIPTION + " TEXT," +
                     COL_CAT_AVATAR_RES_ID + " INTEGER," +
                     COL_CAT_AVATAR_URI + " TEXT," +
-                    COL_CAT_CREATED_AT + " INTEGER" +
+                    COL_CAT_CREATED_AT + " INTEGER," +
+                    COL_CAT_USERNAME + " TEXT" +
                     ");";
 
     /**
@@ -98,8 +103,10 @@ public class MeowDbHelper extends SQLiteOpenHelper {
      */
     public MeowDbHelper(@Nullable Context context) {
         super(context, DB_NAME, null, DB_VERSION);
+        this.appContext = context == null ? null : context.getApplicationContext();
     }
 
+    private final Context appContext;
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -115,6 +122,11 @@ public class MeowDbHelper extends SQLiteOpenHelper {
         if (oldVersion < 2) {
             db.execSQL(SQL_CREATE_FM_TRACK);
             db.execSQL(SQL_CREATE_CAT_PROFILE);
+        }
+        if (oldVersion < 3) {
+            addColumnIfMissing(db, TABLE_FM_TRACK, COL_FM_USERNAME);
+            addColumnIfMissing(db, TABLE_CAT_PROFILE, COL_CAT_USERNAME);
+            migrateLegacyUser(db);
         }
     }
 
@@ -216,11 +228,12 @@ public class MeowDbHelper extends SQLiteOpenHelper {
      * @param audioUri    外部音频 URI（可为空）
      * @return 插入行的 rowId，失败返回 -1
      */
-    public long insertFmTrack(String title, String subtitle, @Nullable Integer audioResId, @Nullable String audioUri) {
+    public long insertFmTrack(String username, String title, String subtitle, @Nullable Integer audioResId, @Nullable String audioUri) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         // 组装插入字段
         ContentValues values = new ContentValues();
+        values.put(COL_FM_USERNAME, safeUsername(username));
         values.put(COL_FM_TITLE, title);
         values.put(COL_FM_SUBTITLE, subtitle);
         if (audioResId != null) {
@@ -272,17 +285,19 @@ public class MeowDbHelper extends SQLiteOpenHelper {
      * @param titleQuery 标题关键字（为空时返回全部）
      * @return 查询结果列表
      */
-    public List<FmTrack> queryFmTracks(@Nullable String titleQuery) {
+    public List<FmTrack> queryFmTracks(String username, @Nullable String titleQuery) {
         SQLiteDatabase db = this.getReadableDatabase();
         List<FmTrack> result = new ArrayList<>();
 
-        String selection = null;
-        String[] selectionArgs = null;
+        String selection = COL_FM_USERNAME + " = ?";
+        List<String> selectionArgsList = new ArrayList<>();
+        selectionArgsList.add(safeUsername(username));
         if (titleQuery != null && !titleQuery.trim().isEmpty()) {
             // 构造 LIKE 查询条件
-            selection = COL_FM_TITLE + " LIKE ?";
-            selectionArgs = new String[]{"%" + titleQuery.trim() + "%"};
+            selection += " AND " + COL_FM_TITLE + " LIKE ?";
+            selectionArgsList.add("%" + titleQuery.trim() + "%");
         }
+        String[] selectionArgs = selectionArgsList.toArray(new String[0]);
 
         // 按 id 升序读取，保证稳定展示顺序
         Cursor cursor = db.query(
@@ -325,10 +340,19 @@ public class MeowDbHelper extends SQLiteOpenHelper {
     /**
      * 判断 FM 音轨表中是否已有数据。
      */
-    public boolean hasAnyFmTracks() {
+    public boolean hasAnyFmTracks(String username) {
         SQLiteDatabase db = this.getReadableDatabase();
         // 只取一条记录即可判断是否存在
-        Cursor cursor = db.query(TABLE_FM_TRACK, new String[]{COL_FM_ID}, null, null, null, null, null, "1");
+        Cursor cursor = db.query(
+                TABLE_FM_TRACK,
+                new String[]{COL_FM_ID},
+                COL_FM_USERNAME + " = ?",
+                new String[]{safeUsername(username)},
+                null,
+                null,
+                null,
+                "1"
+        );
         boolean hasAny = cursor.moveToFirst();
         cursor.close();
         return hasAny;
@@ -348,6 +372,7 @@ public class MeowDbHelper extends SQLiteOpenHelper {
      * @return 插入行的 rowId，失败返回 -1
      */
     public long insertCatProfile(
+            String username,
             String title,
             String age,
             String personality,
@@ -359,6 +384,7 @@ public class MeowDbHelper extends SQLiteOpenHelper {
 
         // 组织插入字段
         ContentValues values = new ContentValues();
+        values.put(COL_CAT_USERNAME, safeUsername(username));
         values.put(COL_CAT_TITLE, title);
         values.put(COL_CAT_AGE, age);
         values.put(COL_CAT_PERSONALITY, personality);
@@ -436,17 +462,19 @@ public class MeowDbHelper extends SQLiteOpenHelper {
      * @param titleQuery 标题关键字（为空时返回全部）
      * @return 查询结果列表
      */
-    public List<CatProfile> queryCatProfiles(@Nullable String titleQuery) {
+    public List<CatProfile> queryCatProfiles(String username, @Nullable String titleQuery) {
         SQLiteDatabase db = this.getReadableDatabase();
         List<CatProfile> result = new ArrayList<>();
 
-        String selection = null;
-        String[] selectionArgs = null;
+        String selection = COL_CAT_USERNAME + " = ?";
+        List<String> selectionArgsList = new ArrayList<>();
+        selectionArgsList.add(safeUsername(username));
         if (titleQuery != null && !titleQuery.trim().isEmpty()) {
             // 构造 LIKE 查询条件
-            selection = COL_CAT_TITLE + " LIKE ?";
-            selectionArgs = new String[]{"%" + titleQuery.trim() + "%"};
+            selection += " AND " + COL_CAT_TITLE + " LIKE ?";
+            selectionArgsList.add("%" + titleQuery.trim() + "%");
         }
+        String[] selectionArgs = selectionArgsList.toArray(new String[0]);
 
         // 按 id 升序读取
         Cursor cursor = db.query(
@@ -491,12 +519,99 @@ public class MeowDbHelper extends SQLiteOpenHelper {
     /**
      * 判断猫咪档案表中是否已有数据。
      */
-    public boolean hasAnyCatProfiles() {
+    public boolean hasAnyCatProfiles(String username) {
         SQLiteDatabase db = this.getReadableDatabase();
         // 只取一条记录即可判断是否存在
-        Cursor cursor = db.query(TABLE_CAT_PROFILE, new String[]{COL_CAT_ID}, null, null, null, null, null, "1");
+        Cursor cursor = db.query(
+                TABLE_CAT_PROFILE,
+                new String[]{COL_CAT_ID},
+                COL_CAT_USERNAME + " = ?",
+                new String[]{safeUsername(username)},
+                null,
+                null,
+                null,
+                "1"
+        );
         boolean hasAny = cursor.moveToFirst();
         cursor.close();
         return hasAny;
+    }
+
+    public void claimLegacyDataForUser(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return;
+        }
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues fmValues = new ContentValues();
+        fmValues.put(COL_FM_USERNAME, safeUsername(username));
+        db.update(
+                TABLE_FM_TRACK,
+                fmValues,
+                COL_FM_USERNAME + " IS NULL OR " + COL_FM_USERNAME + " = ''",
+                null
+        );
+
+        ContentValues catValues = new ContentValues();
+        catValues.put(COL_CAT_USERNAME, safeUsername(username));
+        db.update(
+                TABLE_CAT_PROFILE,
+                catValues,
+                COL_CAT_USERNAME + " IS NULL OR " + COL_CAT_USERNAME + " = ''",
+                null
+        );
+    }
+
+    private static String safeUsername(String username) {
+        return username == null ? "" : username;
+    }
+
+    private void addColumnIfMissing(SQLiteDatabase db, String tableName, String columnName) {
+        if (hasColumn(db, tableName, columnName)) {
+            return;
+        }
+        db.execSQL("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " TEXT");
+    }
+
+    private static boolean hasColumn(SQLiteDatabase db, String tableName, String columnName) {
+        Cursor cursor = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
+        try {
+            int nameIndex = cursor.getColumnIndex("name");
+            while (cursor.moveToNext()) {
+                if (columnName.equals(cursor.getString(nameIndex))) {
+                    return true;
+                }
+            }
+            return false;
+        } finally {
+            cursor.close();
+        }
+    }
+
+    private void migrateLegacyUser(SQLiteDatabase db) {
+        if (appContext == null) {
+            return;
+        }
+        String username = MeowPreferences.getUsername(appContext);
+        if (username == null || username.trim().isEmpty()) {
+            return;
+        }
+        ContentValues fmValues = new ContentValues();
+        fmValues.put(COL_FM_USERNAME, username);
+        db.update(
+                TABLE_FM_TRACK,
+                fmValues,
+                COL_FM_USERNAME + " IS NULL OR " + COL_FM_USERNAME + " = ''",
+                null
+        );
+
+        ContentValues catValues = new ContentValues();
+        catValues.put(COL_CAT_USERNAME, username);
+        db.update(
+                TABLE_CAT_PROFILE,
+                catValues,
+                COL_CAT_USERNAME + " IS NULL OR " + COL_CAT_USERNAME + " = ''",
+                null
+        );
     }
 }

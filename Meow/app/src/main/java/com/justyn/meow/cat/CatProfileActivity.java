@@ -34,6 +34,7 @@ public class CatProfileActivity extends AppCompatActivity {
 
     // 数据库操作类
     private MeowDbHelper dbHelper;
+    private String currentUsername;
     // 列表适配器
     private CatProfileAdapter adapter;
     // 搜索输入框
@@ -59,6 +60,7 @@ public class CatProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cat_profile);
 
         dbHelper = new MeowDbHelper(this);
+        currentUsername = MeowPreferences.getUsername(this);
 
         etSearch = findViewById(R.id.etSearch);
 
@@ -125,16 +127,17 @@ public class CatProfileActivity extends AppCompatActivity {
      * 初始化默认猫咪档案（仅第一次进入时写入）。
      */
     private void seedDefaultProfilesIfNeeded() {
-        if (MeowPreferences.isCatProfileSeeded(this)) {
+        if (MeowPreferences.isCatProfileSeeded(this, currentUsername)) {
             return;
         }
-        if (dbHelper.hasAnyCatProfiles()) {
-            MeowPreferences.markCatProfileSeeded(this);
+        if (dbHelper.hasAnyCatProfiles(currentUsername)) {
+            MeowPreferences.markCatProfileSeeded(this, currentUsername);
             return;
         }
         List<CatProfile> defaults = buildLocalCatProfiles();
         for (CatProfile profile : defaults) {
             dbHelper.insertCatProfile(
+                    currentUsername,
                     profile.getName(),
                     profile.getAge(),
                     profile.getBreed(),
@@ -143,7 +146,7 @@ public class CatProfileActivity extends AppCompatActivity {
                     null
             );
         }
-        MeowPreferences.markCatProfileSeeded(this);
+        MeowPreferences.markCatProfileSeeded(this, currentUsername);
     }
 
     /**
@@ -152,7 +155,7 @@ public class CatProfileActivity extends AppCompatActivity {
      * @param titleQuery 标题关键字，空表示不过滤
      */
     private void reloadList(String titleQuery) {
-        List<CatProfile> profiles = dbHelper.queryCatProfiles(titleQuery);
+        List<CatProfile> profiles = dbHelper.queryCatProfiles(currentUsername, titleQuery);
         profiles.add(CatProfile.addEntry());
         adapter.submitList(profiles);
     }
@@ -208,7 +211,7 @@ public class CatProfileActivity extends AppCompatActivity {
                 avatarResId = R.drawable.logo;
             }
 
-            dbHelper.insertCatProfile(title, age, personality, description, avatarResId, avatarUri);
+            dbHelper.insertCatProfile(currentUsername, title, age, personality, description, avatarResId, avatarUri);
             reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
             dialog.dismiss();
         });

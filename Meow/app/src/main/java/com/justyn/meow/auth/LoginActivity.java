@@ -88,6 +88,7 @@ public class LoginActivity extends AppCompatActivity {
 
         boolean ok = dbHelper.checkLogin(username, password);
         if (ok) {
+            dbHelper.claimLegacyDataForUser(username);
             // 登录通过后补一份昵称，没有就用空串
             String nickname = dbHelper.getNicknameByUsername(username);
             if (nickname == null) {

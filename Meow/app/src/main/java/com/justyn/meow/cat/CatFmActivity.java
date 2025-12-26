@@ -44,6 +44,7 @@ public class CatFmActivity extends AppCompatActivity {
 
     // 数据库操作类：用于读写音频列表
     private MeowDbHelper dbHelper;
+    private String currentUsername;
     // 搜索输入框：实时过滤列表
     private TextInputEditText etSearch;
 
@@ -109,6 +110,7 @@ public class CatFmActivity extends AppCompatActivity {
 
         // 初始化 DB 与搜索框
         dbHelper = new MeowDbHelper(this);
+        currentUsername = MeowPreferences.getUsername(this);
         etSearch = findViewById(R.id.etSearch);
 
         // 注册音频文件选择器，获取 Uri 后持久化读权限
@@ -190,18 +192,18 @@ public class CatFmActivity extends AppCompatActivity {
      * 若数据库为空则写入本地默认音频，避免每次启动重复写入。
      */
     private void seedDefaultTracksIfNeeded() {
-        if (MeowPreferences.isFmSeeded(this)) {
+        if (MeowPreferences.isFmSeeded(this, currentUsername)) {
             return;
         }
-        if (dbHelper.hasAnyFmTracks()) {
-            MeowPreferences.markFmSeeded(this);
+        if (dbHelper.hasAnyFmTracks(currentUsername)) {
+            MeowPreferences.markFmSeeded(this, currentUsername);
             return;
         }
         List<FmTrack> defaults = buildTrackList();
         for (FmTrack track : defaults) {
-            dbHelper.insertFmTrack(track.getTitle(), track.getSubtitle(), track.getResId(), null);
+            dbHelper.insertFmTrack(currentUsername, track.getTitle(), track.getSubtitle(), track.getResId(), null);
         }
-        MeowPreferences.markFmSeeded(this);
+        MeowPreferences.markFmSeeded(this, currentUsername);
     }
 
     /**
@@ -213,7 +215,7 @@ public class CatFmActivity extends AppCompatActivity {
         releasePlayer();
         resetPlaybackUi();
 
-        List<FmTrack> tracks = dbHelper.queryFmTracks(titleQuery);
+        List<FmTrack> tracks = dbHelper.queryFmTracks(currentUsername, titleQuery);
         tracks.add(FmTrack.addEntry());
         adapter.submitList(tracks);
     }
@@ -533,7 +535,7 @@ public class CatFmActivity extends AppCompatActivity {
             }
             String subtitle = safeText(etSubtitle);
             // 写入数据库并刷新列表
-            dbHelper.insertFmTrack(title, subtitle, null, selectedAudioUri[0].toString());
+            dbHelper.insertFmTrack(currentUsername, title, subtitle, null, selectedAudioUri[0].toString());
             reloadList(etSearch.getText() == null ? null : etSearch.getText().toString());
             dialog.dismiss();
         });

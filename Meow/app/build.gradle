@@ -1,43 +1,53 @@
 plugins {
+    // Android 应用插件
     alias(libs.plugins.android.application)
 }
 
 android {
+    // 应用命名空间
     namespace 'com.justyn.meow'
     compileSdk {
+        // 编译使用的 SDK 版本
         version = release(36)
     }
 
     defaultConfig {
+        // 应用基础配置
         applicationId "com.justyn.meow"
         minSdk 28
         targetSdk 36
         versionCode 1
         versionName "1.0"
 
+        // 仪器测试运行器
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
+            // 发布构建的混淆与资源压缩
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
+        // Java 编译版本
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
 }
 
 dependencies {
+    // UI 与基础库
     implementation libs.appcompat
     implementation libs.material.v1130
     implementation libs.activity
     implementation libs.constraintlayout
+    // 测试依赖
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+    // 列表组件
     implementation libs.recyclerview
 }

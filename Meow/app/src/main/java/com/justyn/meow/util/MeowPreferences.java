@@ -18,6 +18,13 @@ public class MeowPreferences {
     private static final String KEY_SEEDED_FM = "seeded_fm";
     private static final String KEY_SEEDED_CAT_PROFILE = "seeded_cat_profile";
 
+    private static String buildUserKey(String baseKey, String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return baseKey;
+        }
+        return baseKey + "_" + username;
+    }
+
     /**
      * 获取 SharedPreferences 实例。
      */
@@ -76,27 +83,43 @@ public class MeowPreferences {
      * 判断 FM 默认数据是否已初始化。
      */
     public static boolean isFmSeeded(Context context) {
-        return getPrefs(context).getBoolean(KEY_SEEDED_FM, false);
+        return isFmSeeded(context, getUsername(context));
+    }
+
+    public static boolean isFmSeeded(Context context, String username) {
+        return getPrefs(context).getBoolean(buildUserKey(KEY_SEEDED_FM, username), false);
     }
 
     /**
      * 标记 FM 默认数据已初始化。
      */
     public static void markFmSeeded(Context context) {
-        getPrefs(context).edit().putBoolean(KEY_SEEDED_FM, true).apply();
+        markFmSeeded(context, getUsername(context));
+    }
+
+    public static void markFmSeeded(Context context, String username) {
+        getPrefs(context).edit().putBoolean(buildUserKey(KEY_SEEDED_FM, username), true).apply();
     }
 
     /**
      * 判断猫咪档案默认数据是否已初始化。
      */
     public static boolean isCatProfileSeeded(Context context) {
-        return getPrefs(context).getBoolean(KEY_SEEDED_CAT_PROFILE, false);
+        return isCatProfileSeeded(context, getUsername(context));
+    }
+
+    public static boolean isCatProfileSeeded(Context context, String username) {
+        return getPrefs(context).getBoolean(buildUserKey(KEY_SEEDED_CAT_PROFILE, username), false);
     }
 
     /**
      * 标记猫咪档案默认数据已初始化。
      */
     public static void markCatProfileSeeded(Context context) {
-        getPrefs(context).edit().putBoolean(KEY_SEEDED_CAT_PROFILE, true).apply();
+        markCatProfileSeeded(context, getUsername(context));
+    }
+
+    public static void markCatProfileSeeded(Context context, String username) {
+        getPrefs(context).edit().putBoolean(buildUserKey(KEY_SEEDED_CAT_PROFILE, username), true).apply();
     }
 }

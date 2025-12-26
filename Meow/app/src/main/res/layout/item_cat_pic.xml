@@ -32,8 +32,7 @@
             android:layout_gravity="bottom"
             android:background="#66000000"
             android:gravity="center_vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp">
+            android:paddingHorizontal="12dp">
 
             <TextView
                 android:id="@+id/tvCatName"

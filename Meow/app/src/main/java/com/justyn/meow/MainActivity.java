@@ -49,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
 
     // 保存打卡状态的 SharedPreferences
     private SharedPreferences checkInPrefs;
+    private String currentUsername;
+    private String keyLastCheckInDate;
+    private String keyStreak;
 
     /**
      * 初始化主界面：校验登录态、绑定控件与注册点击事件。
@@ -85,13 +88,13 @@ public class MainActivity extends AppCompatActivity {
         tvCheckInSub = findViewById(R.id.tvCheckInSub);
 
         // 打卡持久化
-        checkInPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        initCheckInPrefs();
 
         // 绑定当前用户
         bindCurrentUser();
 
         // 初始化打卡显示
-        int streak = checkInPrefs.getInt(KEY_STREAK, 0);
+        int streak = checkInPrefs.getInt(keyStreak, 0);
         updateCheckInText(streak);
 
         // 退出登录
@@ -161,8 +164,8 @@ public class MainActivity extends AppCompatActivity {
      */
     private void handleCheckIn() {
         String today = getTodayString(); // 例如 2025-12-08
-        String lastDate = checkInPrefs.getString(KEY_LAST_CHECKIN_DATE, null);
-        int streak = checkInPrefs.getInt(KEY_STREAK, 0);
+        String lastDate = checkInPrefs.getString(keyLastCheckInDate, null);
+        int streak = checkInPrefs.getInt(keyStreak, 0);
 
         // 如果今天已经打卡了
         if (today.equals(lastDate)) {
@@ -183,8 +186,8 @@ public class MainActivity extends AppCompatActivity {
 
         // 保存新数据
         checkInPrefs.edit()
-                .putString(KEY_LAST_CHECKIN_DATE, today)
-                .putInt(KEY_STREAK, streak)
+                .putString(keyLastCheckInDate, today)
+                .putInt(keyStreak, streak)
                 .apply();
 
         // 更新 UI
@@ -198,6 +201,38 @@ public class MainActivity extends AppCompatActivity {
     private void updateCheckInText(int streak) {
         String text = "已连续打卡 " + streak + " 天";
         tvCheckInSub.setText(text);
+    }
+
+    private void initCheckInPrefs() {
+        currentUsername = MeowPreferences.getUsername(this);
+        checkInPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        keyLastCheckInDate = buildCheckInKey(KEY_LAST_CHECKIN_DATE);
+        keyStreak = buildCheckInKey(KEY_STREAK);
+        migrateLegacyCheckInIfNeeded();
+    }
+
+    private String buildCheckInKey(String baseKey) {
+        if (currentUsername == null || currentUsername.trim().isEmpty()) {
+            return baseKey;
+        }
+        return baseKey + "_" + currentUsername;
+    }
+
+    private void migrateLegacyCheckInIfNeeded() {
+        if (currentUsername == null || currentUsername.trim().isEmpty()) {
+            return;
+        }
+        if (checkInPrefs.contains(keyStreak) || checkInPrefs.contains(keyLastCheckInDate)) {
+            return;
+        }
+        SharedPreferences.Editor editor = checkInPrefs.edit();
+        if (checkInPrefs.contains(KEY_STREAK)) {
+            editor.putInt(keyStreak, checkInPrefs.getInt(KEY_STREAK, 0));
+        }
+        if (checkInPrefs.contains(KEY_LAST_CHECKIN_DATE)) {
+            editor.putString(keyLastCheckInDate, checkInPrefs.getString(KEY_LAST_CHECKIN_DATE, null));
+        }
+        editor.apply();
     }
 
     /**
